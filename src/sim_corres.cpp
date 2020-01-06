@@ -34,8 +34,8 @@ void SimCorr::init(int pix_step)
     {
 	Vector3d p( (c-cx)/f,  (r-cy)/f, 1.); 
 	p.z() = uniform_dis(gen); 
-	p.x() *= p.z(); 
-	p.y() *= p.z(); 
+	// p.x() *= p.z(); 
+	// p.y() *= p.z(); 
 	mg_feats.emplace(make_pair(++id, p));
     }
     
@@ -50,12 +50,17 @@ vector<pair<Vector3d, Vector3d>> SimCorr::find_corrs( Matrix3d& Rji, Vector3d& t
     map<int, Vector3d>::iterator it = mg_feats.begin();
     while(it != mg_feats.end()){
 	
-	Vector3d pi = it->second; 
+	Vector3d pi = it->second;
+	pi.x() = pi.x()*pi.z(); 
+	pi.y() = pi.y()*pi.z();  
 	Vector3d pj = Rji*pi + tji; 
 	
 	if(pj.z() >= 0.2){
-	    
-	    ret.push_back(make_pair(pi, pj)); 
+	    	
+	    pj.x() = pj.x() / pj.z(); 
+	    pj.y() = pj.y() / pj.z(); 
+
+	    ret.push_back(make_pair(it->second, pj)); 
 	} 
 	++it; 
     }
