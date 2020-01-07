@@ -12,8 +12,8 @@ class MotionEstimator
 {
   public:
     bool solveRelativeRT(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &R, Vector3d &T, cv::Mat& mask);
-    bool solveRelativeRT_PNP(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &Rotation, Vector3d &Translation);
-    
+    bool solveRelativeRT_PNP(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &R, Vector3d &T, cv::Mat& mask);
+
     vector<pair<Vector3d, Vector3d>> getInliers(const vector<pair<Vector3d, Vector3d>> &corres, cv::Mat& mask);     
 
   private:

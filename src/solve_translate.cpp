@@ -41,24 +41,24 @@ bool SolveTranslate::solveTCeres(const vector<pair<Vector3d, Vector3d>> &corres,
 
     	ceres::ResidualBlockId fid = problem.AddResidualBlock(f, loss_function, para_T[0]); 
 
-    	if(i< 10){
-    		 vector<double*>* para = new vector<double*>; 
-    		 problem.GetParameterBlocksForResidualBlock(fid, para); 
-             vector<double> res(2); 
-             f->Evaluate(&para[0][0], &res[0], 0); 
-             cout<<"solve_translate.cpp: residual: "<<res[0]<<" "<<res[1]<<endl;
-    	}
+    	// if(i< 10){
+    	// 	 vector<double*>* para = new vector<double*>; 
+    	// 	 problem.GetParameterBlocksForResidualBlock(fid, para); 
+     //         vector<double> res(2); 
+     //         f->Evaluate(&para[0][0], &res[0], 0); 
+     //         cout<<"solve_translate.cpp: residual: "<<res[0]<<" "<<res[1]<<endl;
+    	// }
     }
 
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::DENSE_SCHUR;
     options.trust_region_strategy_type = ceres::DOGLEG;
     options.max_num_iterations = 20;
-    options.minimizer_progress_to_stdout = true;
+    // options.minimizer_progress_to_stdout = true;
     // options.max_solver_time_in_seconds = SOLVER_TIME; 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
-    cout << summary.BriefReport() << endl;
+    // cout << summary.BriefReport() << endl;
 
     // Vector3d tji(para_T[0][0], para_T[0][1], para_T[0][2]); 
     tji = Vector3d(para_T[0][0], para_T[0][1], para_T[0][2]);

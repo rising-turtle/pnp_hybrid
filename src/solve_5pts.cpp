@@ -246,8 +246,8 @@ bool MotionEstimator::solveRelativeRT(const vector<pair<Vector3d, Vector3d>> &co
             // ROS_WARN("---------------5points----------------");
             // ROS_WARN("input points %d inliers %d", ll.size(), inlier_cnt); 
 
-            cout<<"solve_5pts.cpp: ---------------2d-2d----------------"<<endl; 
-            cout<<"input points "<<ll.size()<<" inliers "<<inlier_cnt<<endl; 
+            // cout<<"solve_5pts.cpp: ---------------2d-2d----------------"<<endl; 
+            // cout<<"input points "<<ll.size()<<" inliers "<<inlier_cnt<<endl; 
 
             return true;
         }
@@ -257,7 +257,7 @@ bool MotionEstimator::solveRelativeRT(const vector<pair<Vector3d, Vector3d>> &co
     return false;
 }
 
-bool MotionEstimator::solveRelativeRT_PNP(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &Rotation, Vector3d &Translation)
+bool MotionEstimator::solveRelativeRT_PNP(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &Rotation, Vector3d &Translation, cv::Mat& mask)
 {
     vector<cv::Point3f> lll;
     vector<cv::Point2f> rr;
@@ -268,18 +268,18 @@ bool MotionEstimator::solveRelativeRT_PNP(const vector<pair<Vector3d, Vector3d>>
             rr.push_back(cv::Point2f(corres[i].second(0) , corres[i].second(1) ));
         }
     }
-    cv::Mat rvec,tvec,inliersArr;
+    cv::Mat rvec,tvec;
     cv::Mat cameraMatrix = (cv::Mat_<double>(3, 3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
 
     // cv::solvePnPRansac(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, 100, 1.0/460, 0.99,
     //                   inliersArr, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
 
     cv::solvePnPRansac(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, 100, 0.3/460, 0.99,
-                       inliersArr, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
+                       mask, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
 
 
-    cout<<"solve_5pts.cpp: ---------------3d-2d----------------"<<endl; 
-    cout<<"input points "<<lll.size()<<" inliers "<<inliersArr.rows<<endl; 
+    // cout<<"solve_5pts.cpp: ---------------3d-2d----------------"<<endl; 
+    // cout<<"input points "<<lll.size()<<" inliers "<<mask.rows<<endl; 
     Vector3d tran(tvec.at<double>(0, 0), tvec.at<double>(1, 0), tvec.at<double>(2, 0));
     Matrix3d rota = SO3(rvec.at<double>(0, 0), rvec.at<double>(1, 0), rvec.at<double>(2, 0)).matrix();
 
