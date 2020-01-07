@@ -42,7 +42,7 @@ public:
     
     // init feature points randomly locates in range z-axis [2-7] meters 
     map<int, Vector3d > mg_feats; // globale feature points [normalized_u, normalized_v, z]
-    void init(int pix_step = 5); // first pose is at [0, 0, 0] towards z axis 
+    void init(int pix_step = 10); // first pose is at [0, 0, 0] towards z axis 
     
     // add noise to the corresponse features 
     vector<pair<Vector3d, Vector3d>> add_noise( vector<pair<Vector3d, Vector3d>>& corres, double pix_std = 0.5/460., poly d_std=poly());

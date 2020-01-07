@@ -207,7 +207,7 @@ namespace cv {
 }
 
 
-bool MotionEstimator::solveRelativeRT(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &Rotation, Vector3d &Translation)
+bool MotionEstimator::solveRelativeRT(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &Rotation, Vector3d &Translation, cv::Mat& mask)
 {
     if (corres.size() >= 15)
     {
@@ -217,12 +217,15 @@ bool MotionEstimator::solveRelativeRT(const vector<pair<Vector3d, Vector3d>> &co
             ll.push_back(cv::Point2f(corres[i].first(0), corres[i].first(1)));
             rr.push_back(cv::Point2f(corres[i].second(0), corres[i].second(1)));
         }
-        cv::Mat mask;
+        // cv::Mat mask;
         cv::Mat E = cv::findFundamentalMat(ll, rr, cv::FM_RANSAC, 0.3 / 460, 0.99, mask);
         cv::Mat cameraMatrix = (cv::Mat_<double>(3, 3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
         cv::Mat rot, trans;
         int inlier_cnt = cv::recoverPose(E, ll, rr, cameraMatrix, rot, trans, mask);
         // cout << "solve_5pts.cpp: in solveRelativeRT(): inlier_cnt " << inlier_cnt << endl;
+
+        // get inliers 
+        // cout<<"mask.rows: "<<mask.rows<<" mask.cols: "<<mask.cols<<endl; 
 
         //  cout<<"E: "<<endl;
         // print_mat<double>(E);
@@ -299,4 +302,16 @@ bool MotionEstimator::solveRelativeRT_PNP(const vector<pair<Vector3d, Vector3d>>
     return true;
 }
 
+vector<pair<Vector3d, Vector3d>> MotionEstimator::getInliers(const vector<pair<Vector3d, Vector3d>> &corres, cv::Mat& mask)
+{
+    assert(mask.rows == corres.size()); 
 
+    vector<pair<Vector3d, Vector3d>> ret;
+    for(int i=0; i<corres.size(); i++){
+
+        if(mask.at<unsigned char>(i,0) == 0) continue; 
+        
+        ret.push_back(make_pair(corres[i].first, corres[i].second)); 
+    } 
+    return ret; 
+}
