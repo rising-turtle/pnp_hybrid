@@ -73,13 +73,12 @@ void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d, int TIMES)
 
     vector<pair<Vector3d, Vector3d>> corrs = sim.find_corrs(R, t);
 
-    vector<double> h_et, h_ea, t_et, t_ea; 
-
     ouf<<"Num_of_3d "<<"\t"<<" Mean: hybrid_trans "<<"\t"<<" hybrid_rot "<<"\t"<<" 3d_2d_trans "<<"\t"<<" 3d_2d_rot "<<
     "\t"<<" Std: hybrid_trans "<<"\t"<<" hybrid_rot "<<"\t"<<" 3d_2d_trans "<<"\t"<<" 3d_2d_rot"<<endl; 
 
     for(int j=0; j<v_cnt_3d.size(); j++){
         int cnt_3d = v_cnt_3d[j]; 
+        vector<double> h_et, h_ea, t_et, t_ea; 
         for(int cnt = 0; cnt < TIMES; cnt++){
             vector<pair<Vector3d, Vector3d>> corrs_noise = sim.add_noise(corrs); 
             // pair<double, double> hybrid_err = run_once_hybrid(corrs_noise, cnt_3d, cnt_2d, Rij, tij); 
@@ -231,9 +230,9 @@ void test_2d_2d( vector<pair<Vector3d, Vector3d>>& corrs_noise, Matrix3d& Rij_e,
     // 2d-2d  
     me.solveRelativeRT(corrs_noise, Rij_e, tij_e, mask); 
     Vector3d ea = Rij_e.eulerAngles(2, 1, 0); 
-    cout << "to Euler angles:" << endl;
-    cout << "yaw: "<<R2D(ea.x()) <<" pitch: "<<R2D(ea.y())<<" roll: "<<R2D(ea.z()) << endl;
-    cout <<"main.cpp: 2d-2d estimate Rij: "<<endl<<Rij_e<<endl<<"tij: "<<tij_e.transpose()<<endl; 
+    // cout << "to Euler angles:" << endl;
+    // cout << "yaw: "<<R2D(ea.x()) <<" pitch: "<<R2D(ea.y())<<" roll: "<<R2D(ea.z()) << endl;
+    // cout <<"main.cpp: 2d-2d estimate Rij: "<<endl<<Rij_e<<endl<<"tij: "<<tij_e.transpose()<<endl; 
 }
 
 
@@ -245,7 +244,7 @@ void test_3d_2d(vector<pair<Vector3d, Vector3d>>& corrs_noise, Matrix3d& Rij_e, 
     me.solveRelativeRT_PNP(corrs_noise, Rij_e, tij_e, mask);
     Vector3d ea = Rij_e.eulerAngles(2, 1, 0); 
 
-    cout << "to Euler angles:" << endl;
-    cout << "yaw: "<<R2D(ea.x()) <<" pitch: "<<R2D(ea.y())<<" roll: "<<R2D(ea.z()) << endl;
-    cout <<"main.cpp: 3d-2d estimate Rij: "<<endl<<Rij_e<<endl<<"tij: "<<tij_e.transpose()<<endl; 
+    // cout << "to Euler angles:" << endl;
+    // cout << "yaw: "<<R2D(ea.x()) <<" pitch: "<<R2D(ea.y())<<" roll: "<<R2D(ea.z()) << endl;
+    // cout <<"main.cpp: 3d-2d estimate Rij: "<<endl<<Rij_e<<endl<<"tij: "<<tij_e.transpose()<<endl; 
 }
