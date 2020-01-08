@@ -17,10 +17,6 @@
 using namespace Eigen; 
 using namespace std; 
 
-#define D2R(d) (((d)/180.)*M_PI)
-#define R2D(r) (((r)/M_PI)*180.)
-
-
 // void test_hybrid(SimCorr& ); 
 void test_2d_2d( vector<pair<Vector3d, Vector3d>>& corrs_noise, Matrix3d& Rij_e, Vector3d& tij_e, cv::Mat& mask); 
 void test_3d_2d( vector<pair<Vector3d, Vector3d>>& corrs_noise, Matrix3d& Rij_e, Vector3d& tij_e, cv::Mat& mask);
@@ -39,7 +35,7 @@ void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d = 40, int TIMES = 10);
 int main(int argc, char* argv[])
 {
     vector<int> v3d{4, 7, 10, 15, 20, 25, 30, 35, 40}; 
-    run_monte_carlo(v3d, 40, 500); 
+    run_monte_carlo(v3d, 40, 50); 
 
     return 0; 
 }
@@ -88,7 +84,10 @@ void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d, int TIMES)
 
             vector<double> err = run_once_together(corrs_noise, cnt_3d, cnt_2d, Rij, tij); 
             h_et.push_back(err[0]); h_ea.push_back(err[1]); 
-            t_et.push_back(err[2]); t_ea.push_back(err[3]); 
+            if(err[2] < 2.)
+                t_et.push_back(err[2]); 
+            if(err[3] < D2R(30))
+                t_ea.push_back(err[3]); 
 
             // cout<<"cnt: "<<cnt<<" hybrid error: trans: "<<hybrid_err.first<<" angle: "<<hybrid_err.second<<" 3d-2d error: trans: "<<
             //     t32_err.first<<" angle: "<< t32_err.second<<endl;
@@ -134,9 +133,17 @@ vector<double> run_once_together(vector<pair<Vector3d, Vector3d>>& corres, int c
     MotionEstimator me;
     me.solvePNP_2D_2D(in_2d, Rij_e_h, tij_e_h);    
 
+    // compute 3d-2d transformation 
+    me.solvePNP_3D_2D(in_3d, Rij_e_t, tij_e_t); 
+
     // estimate translation 
     SolveTranslate st; 
+    Eigen::Vector3d ntij = tij_e_h; 
+    tij_e_h = tij_e_t; // use 3d-2d results as initial value 
     st.solveTCeres(in_3d, Rij_e_h, tij_e_h); 
+    // st.solveTScaleCeres(in_3d, Rij_e_h, ntij, tij_e_h); 
+    // st.solveTCeresWithPt(in_3d, Rij_e_h, tij_e_h); 
+    // st.solveTCeresWithPt(in_3d, Rij_e_h, tij_e_h); 
 
     // compute error 
     Matrix3d dR_h = Rij_gt.transpose()*Rij_e_h; 
@@ -145,14 +152,18 @@ vector<double> run_once_together(vector<pair<Vector3d, Vector3d>>& corres, int c
     double et_h = dt_h.norm(); 
     double ea_h = computeAngle(dR_h); 
 
-    // compute 3d-2d transformation 
-    me.solvePNP_3D_2D(in_3d, Rij_e_t, tij_e_t); 
+ 
 
     Matrix3d dR_t = Rij_gt.transpose()*Rij_e_t; 
     Vector3d dt_t = tij_gt - tij_e_t; 
 
     double et_t = dt_t.norm(); 
     double ea_t = computeAngle(dR_t); 
+
+
+    cout<<"T_3d_2d err: "<<sum_error(in_3d, Rij_e_h, tij_e_t)<<" T_gt err: "<<sum_error(in_3d, Rij_e_h, tij_gt)<<
+        " T_hybrid err: "<<sum_error(in_3d, Rij_e_h, tij_e_h)<<endl; 
+
 
     vector<double> ret{et_h, ea_h, et_t, ea_t}; 
 

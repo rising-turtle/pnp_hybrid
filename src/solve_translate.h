@@ -24,6 +24,12 @@ public:
 	// notice here corres must be inliers 
 	bool solveTCeres(const vector<pair<Vector3d, Vector3d>> &corres, const Matrix3d &Rij, Vector3d &tv);
 
-	double para_T[0][3]; 
+	bool solveTScaleCeres(const vector<pair<Vector3d, Vector3d>> &corres, const Matrix3d &Rij, const Vector3d& ntij, Vector3d &tv);
+
+	bool solveTCeresWithPt(const vector<pair<Vector3d, Vector3d>> &corres, const Matrix3d &Rij, Vector3d &tij);
+
+	double para_T[1][3]; // for translation 
+	double para_s[1][0]; // for scale 
+	double para_pt[1000][3]; 
 
 };

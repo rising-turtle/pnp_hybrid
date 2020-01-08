@@ -218,7 +218,8 @@ bool MotionEstimator::solveRelativeRT(const vector<pair<Vector3d, Vector3d>> &co
             rr.push_back(cv::Point2f(corres[i].second(0), corres[i].second(1)));
         }
         // cv::Mat mask;
-        cv::Mat E = cv::findFundamentalMat(ll, rr, cv::FM_RANSAC, 0.3 / 460, 0.99, mask);
+        // cv::Mat E = cv::findFundamentalMat(ll, rr, cv::FM_RANSAC, 0.3 / 460, 0.99, mask);
+        cv::Mat E = cv::findFundamentalMat(ll, rr, cv::FM_RANSAC, 1. / 460, 0.99, mask);
         cv::Mat cameraMatrix = (cv::Mat_<double>(3, 3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
         cv::Mat rot, trans;
         int inlier_cnt = cv::recoverPose(E, ll, rr, cameraMatrix, rot, trans, mask);
@@ -271,7 +272,9 @@ bool MotionEstimator::solveRelativeRT_PNP(const vector<pair<Vector3d, Vector3d>>
     cv::Mat rvec,tvec;
     cv::Mat cameraMatrix = (cv::Mat_<double>(3, 3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
 
-    cv::solvePnPRansac(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, 100, 0.3/460, 0.99,
+    // cv::solvePnPRansac(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, 100, 0.3/460, 0.99,
+    //                   mask, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
+    cv::solvePnPRansac(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, 100, 2./460, 0.99,
                        mask, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
 
     // cout<<"solve_5pts.cpp: ---------------3d-2d----------------"<<endl; 
@@ -331,7 +334,7 @@ bool MotionEstimator::solvePNP_3D_2D(const vector<pair<Vector3d, Vector3d>> &cor
     // cv::solvePnPRansac(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, 100, 1.0/460, 0.99,
     //                   inliersArr, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
 
-    cv::solvePnP(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
+    cv::solvePnP(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, CV_EPNP);//maybe don't need 100times
 
     // cout<<"solve_5pts.cpp: ---------------3d-2d----------------"<<endl; 
     Vector3d tran(tvec.at<double>(0, 0), tvec.at<double>(1, 0), tvec.at<double>(2, 0));

@@ -18,6 +18,9 @@ using namespace Eigen;
 
 #define SQ(x) ((x)*(x))
 
+#define D2R(d) (((d)/180.)*M_PI)
+#define R2D(r) (((r)/M_PI)*180.)
+
 extern vector<pair<Vector3d, Vector3d>> getN(const vector<pair<Vector3d, Vector3d>>& in, int N);
 extern double computeAngle(Matrix3d& R); 
 
@@ -26,6 +29,7 @@ extern pair<double, double> getMeanStd(vector<double>& data);
 extern vector<pair<Vector3d, Vector3d>> getInliers(const vector<pair<Vector3d, Vector3d>> &corres, cv::Mat& mask);     
 extern vector<pair<Vector3d, Vector3d>> getInliersIndex(const vector<pair<Vector3d, Vector3d>> &corres, cv::Mat& mask);     
 
+extern double sum_error(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d& Rij, Vector3d& tij); 
 
 struct poly{
 	poly(double para[3]){

@@ -79,3 +79,26 @@ vector<pair<Vector3d, Vector3d>> getInliersIndex(const vector<pair<Vector3d, Vec
     } 
     return ret; 
 }     
+
+
+double sum_error(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d& Rij, Vector3d& tij)
+{
+	double ret = 0; 
+	Matrix3d Rji = Rij.transpose(); 
+	Vector3d tji = -Rji*tij; 
+
+	int N = corres.size(); 
+	for(int i=0; i<corres.size(); i++){
+
+		Vector3d pti = corres[i].first; 
+		Vector3d ptj = corres[i].second; 
+
+ 		pti.x() *= pti.z(); 
+    	pti.y() *= pti.z();
+
+    	Vector3d pti_j = Rji*pti + tji; 
+    	Vector2d err(pti_j.x() - ptj.x(), pti_j.y() - ptj.y()); 
+    	ret += err.norm(); 
+	}
+	return ret; 
+}
