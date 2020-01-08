@@ -14,9 +14,10 @@ class MotionEstimator
     bool solveRelativeRT(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &R, Vector3d &T, cv::Mat& mask);
     bool solveRelativeRT_PNP(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &R, Vector3d &T, cv::Mat& mask);
 
-    vector<pair<Vector3d, Vector3d>> getInliers(const vector<pair<Vector3d, Vector3d>> &corres, cv::Mat& mask);     
+    bool solvePNP_2D_2D(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &R, Vector3d &T);
+    bool solvePNP_3D_2D(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &R, Vector3d &T);
 
-  private:
+    private:
     double testTriangulation(const vector<cv::Point2f> &l,
                              const vector<cv::Point2f> &r,
                              cv::Mat_<double> R, cv::Mat_<double> t);

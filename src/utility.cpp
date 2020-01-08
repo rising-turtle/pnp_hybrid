@@ -47,3 +47,35 @@ pair<double, double> getMeanStd(vector<double>& v)
 	double stdev = sqrt(accum / (v.size()-1));
 	return make_pair(m, stdev); 
 }
+
+vector<pair<Vector3d, Vector3d>> getInliers(const vector<pair<Vector3d, Vector3d>> &corres, cv::Mat& mask)
+{
+    assert(mask.rows == corres.size()); 
+
+    vector<pair<Vector3d, Vector3d>> ret;
+    for(int i=0; i<corres.size(); i++){
+
+        if(mask.at<unsigned char>(i,0) == 0) continue; 
+        
+        ret.push_back(make_pair(corres[i].first, corres[i].second)); 
+    } 
+    return ret; 
+}
+
+vector<pair<Vector3d, Vector3d>> getInliersIndex(const vector<pair<Vector3d, Vector3d>> &corres, cv::Mat& mask)
+{
+	vector<pair<Vector3d, Vector3d>> ret;
+	int index; 
+    for(int i=0; i<mask.rows; i++){
+
+    	index = mask.at<unsigned char>(i, 0); 
+
+    	if(index > corres.size()){
+    		cerr<<"utility.cpp: index: "<<index<<" > corres.size(): "<<corres.size()<<endl; 
+    		continue; 
+    	}
+        
+        ret.push_back(make_pair(corres[index].first, corres[index].second)); 
+    } 
+    return ret; 
+}     

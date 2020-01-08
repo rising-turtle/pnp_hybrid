@@ -31,12 +31,15 @@ pair<double, double> run_once_3d_2d(vector<pair<Vector3d, Vector3d>>& corres, in
 pair<double, double> run_once_hybrid(vector<pair<Vector3d, Vector3d>>& corres, int cnt_3d, int cnt_2d, 
     Matrix3d& Rij_gt, Vector3d& tij_gt);
 
+vector<double> run_once_together(vector<pair<Vector3d, Vector3d>>& corres, int cnt_3d, int cnt_2d, 
+    Matrix3d& Rij_gt, Vector3d& tij_gt);
+
 void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d = 40, int TIMES = 10); 
 
 int main(int argc, char* argv[])
 {
-    vector<int> v3d{7, 10}; 
-    run_monte_carlo(v3d, 40, 3); 
+    vector<int> v3d{4, 7, 10, 15, 20, 25, 30, 35, 40}; 
+    run_monte_carlo(v3d, 40, 500); 
 
     return 0; 
 }
@@ -79,14 +82,20 @@ void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d, int TIMES)
         int cnt_3d = v_cnt_3d[j]; 
         for(int cnt = 0; cnt < TIMES; cnt++){
             vector<pair<Vector3d, Vector3d>> corrs_noise = sim.add_noise(corrs); 
-            pair<double, double> hybrid_err = run_once_hybrid(corrs_noise, cnt_3d, cnt_2d, Rij, tij); 
-            pair<double, double> t32_err = run_once_3d_2d(corrs_noise, cnt_3d, cnt_2d, Rij, tij);
-            h_et.push_back(hybrid_err.first); h_ea.push_back(hybrid_err.second); 
-            t_et.push_back(t32_err.first); t_ea.push_back(t32_err.second); 
+            // pair<double, double> hybrid_err = run_once_hybrid(corrs_noise, cnt_3d, cnt_2d, Rij, tij); 
+            // pair<double, double> t32_err = run_once_3d_2d(corrs_noise, cnt_3d, cnt_2d, Rij, tij);
+            // h_et.push_back(hybrid_err.first); h_ea.push_back(hybrid_err.second); 
+            // t_et.push_back(t32_err.first); t_ea.push_back(t32_err.second); 
 
-            cout<<"cnt: "<<cnt<<" hybrid error: trans: "<<hybrid_err.first<<" angle: "<<hybrid_err.second<<" 3d-2d error: trans: "<<
-                t32_err.first<<" angle: "<< t32_err.second<<endl;
+            vector<double> err = run_once_together(corrs_noise, cnt_3d, cnt_2d, Rij, tij); 
+            h_et.push_back(err[0]); h_ea.push_back(err[1]); 
+            t_et.push_back(err[2]); t_ea.push_back(err[3]); 
 
+            // cout<<"cnt: "<<cnt<<" hybrid error: trans: "<<hybrid_err.first<<" angle: "<<hybrid_err.second<<" 3d-2d error: trans: "<<
+            //     t32_err.first<<" angle: "<< t32_err.second<<endl;
+
+            cout<<"cnt: "<<cnt<<" hybrid error: trans: "<<err[0]<<" angle: "<<err[1]<<" 3d-2d error: trans: "<<
+                 err[2]<<" angle: "<< err[3]<<endl;
         }
 
         // compute mean and std 
@@ -104,6 +113,54 @@ void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d, int TIMES)
     return ; 
 }
 
+vector<double> run_once_together(vector<pair<Vector3d, Vector3d>>& corres, int cnt_3d, int cnt_2d, 
+    Matrix3d& Rij_gt, Vector3d& tij_gt)
+{
+    Matrix3d Rij_e_h, Rij_e_t;
+    Vector3d tij_e_h, tij_e_t; 
+    cv::Mat mask, mask_t; 
+    test_2d_2d(corres, Rij_e_h, tij_e_h, mask); 
+
+    // with the speficied number of features 
+    vector<pair<Vector3d, Vector3d>> inliers = getInliers(corres, mask); 
+
+    // from the 2d inliers find out 3d inliers 
+    test_3d_2d(inliers, Rij_e_t, tij_e_t, mask_t); 
+
+    vector<pair<Vector3d, Vector3d>> inliers_3d = getInliersIndex(inliers, mask_t); 
+    vector<pair<Vector3d, Vector3d>> in_2d = getN(inliers, cnt_2d); 
+    vector<pair<Vector3d, Vector3d>> in_3d = getN(inliers_3d, cnt_3d); 
+
+    // update Rij_e using the specified number of 2d features 
+    MotionEstimator me;
+    me.solvePNP_2D_2D(in_2d, Rij_e_h, tij_e_h);    
+
+    // estimate translation 
+    SolveTranslate st; 
+    st.solveTCeres(in_3d, Rij_e_h, tij_e_h); 
+
+    // compute error 
+    Matrix3d dR_h = Rij_gt.transpose()*Rij_e_h; 
+    Vector3d dt_h = tij_gt - tij_e_h; 
+
+    double et_h = dt_h.norm(); 
+    double ea_h = computeAngle(dR_h); 
+
+    // compute 3d-2d transformation 
+    me.solvePNP_3D_2D(in_3d, Rij_e_t, tij_e_t); 
+
+    Matrix3d dR_t = Rij_gt.transpose()*Rij_e_t; 
+    Vector3d dt_t = tij_gt - tij_e_t; 
+
+    double et_t = dt_t.norm(); 
+    double ea_t = computeAngle(dR_t); 
+
+    vector<double> ret{et_h, ea_h, et_t, ea_t}; 
+
+    return ret; 
+}
+
+
 pair<double, double> run_once_hybrid(vector<pair<Vector3d, Vector3d>>& corres, int cnt_3d, int cnt_2d, 
     Matrix3d& Rij_gt, Vector3d& tij_gt)
 {
@@ -114,13 +171,15 @@ pair<double, double> run_once_hybrid(vector<pair<Vector3d, Vector3d>>& corres, i
     test_2d_2d(corres, Rij_e, tij_e, mask); 
 
     // with the speficied number of features 
-    vector<pair<Vector3d, Vector3d>> inliers = ((MotionEstimator*)0)->getInliers(corres, mask); 
+    vector<pair<Vector3d, Vector3d>> inliers = getInliers(corres, mask); 
     vector<pair<Vector3d, Vector3d>> in_2d = getN(inliers, cnt_2d); 
     vector<pair<Vector3d, Vector3d>> in_3d = getN(inliers, cnt_3d); 
 
     // update Rij_e using the specified number of 2d features 
-    test_2d_2d(in_2d, Rij_e, tij_e, mask); 
-
+    mask = cv::Mat();
+    // test_2d_2d(in_2d, Rij_e, tij_e, mask); 
+    MotionEstimator me;
+    me.solvePNP_2D_2D(in_2d, Rij_e, tij_e);    
 
     // estimate translation 
     SolveTranslate st; 
@@ -135,6 +194,8 @@ pair<double, double> run_once_hybrid(vector<pair<Vector3d, Vector3d>>& corres, i
     return make_pair(et, ea); 
 }
 
+
+
 pair<double, double> run_once_3d_2d(vector<pair<Vector3d, Vector3d>>& corres, int cnt_3d, int cnt_2d, 
     Matrix3d& Rij_gt, Vector3d& tij_gt)
 {
@@ -145,10 +206,15 @@ pair<double, double> run_once_3d_2d(vector<pair<Vector3d, Vector3d>>& corres, in
     test_3d_2d(corres, Rij_e, tij_e, mask); 
 
     // with the speficied number of features 
-    vector<pair<Vector3d, Vector3d>> inliers = ((MotionEstimator*)0)->getInliers(corres, mask); 
+    cout<<"corres.size(): "<<corres.size()<<" mask.rows: "<<mask.rows<<endl;
+    vector<pair<Vector3d, Vector3d>> inliers = getInliersIndex(corres, mask); 
     vector<pair<Vector3d, Vector3d>> in_3d = getN(inliers, cnt_3d); 
 
-    test_3d_2d(in_3d, Rij_e, tij_e, mask); 
+    mask = cv::Mat(); 
+    // test_3d_2d(in_3d, Rij_e, tij_e, mask); 
+    
+    MotionEstimator me;
+    me.solvePNP_3D_2D(in_3d, Rij_e, tij_e);    
 
     // compute error 
     Matrix3d dR = Rij_gt.transpose()*Rij_e; 
@@ -174,8 +240,6 @@ void test_2d_2d( vector<pair<Vector3d, Vector3d>>& corrs_noise, Matrix3d& Rij_e,
 void test_3d_2d(vector<pair<Vector3d, Vector3d>>& corrs_noise, Matrix3d& Rij_e, Vector3d& tij_e, cv::Mat& mask)
 {
     MotionEstimator me;
-
-    SolveTranslate st; 
 
     // 3d-2d 
     me.solveRelativeRT_PNP(corrs_noise, Rij_e, tij_e, mask);

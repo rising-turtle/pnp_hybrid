@@ -271,30 +271,12 @@ bool MotionEstimator::solveRelativeRT_PNP(const vector<pair<Vector3d, Vector3d>>
     cv::Mat rvec,tvec;
     cv::Mat cameraMatrix = (cv::Mat_<double>(3, 3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
 
-    // cv::solvePnPRansac(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, 100, 1.0/460, 0.99,
-    //                   inliersArr, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
-
     cv::solvePnPRansac(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, 100, 0.3/460, 0.99,
                        mask, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
 
-
     // cout<<"solve_5pts.cpp: ---------------3d-2d----------------"<<endl; 
-    // cout<<"input points "<<lll.size()<<" inliers "<<mask.rows<<endl; 
     Vector3d tran(tvec.at<double>(0, 0), tvec.at<double>(1, 0), tvec.at<double>(2, 0));
     Matrix3d rota = SO3(rvec.at<double>(0, 0), rvec.at<double>(1, 0), rvec.at<double>(2, 0)).matrix();
-
-//  Vector2d tp1,residualV;
-//  Vector3d tp23d;
-//    for (int i = 0; i < int(lll.size()); i++) {
-//        tp1 = Vector2d(rr[i].x,rr[i].y);
-//        tp23d = Vector3d(lll[i].x,lll[i].y,lll[i].z);
-//
-//        tp23d = rota * tp23d + tran;
-//        Vector2d tp2(tp23d.x()/tp23d.z(),tp23d.y()/tp23d.z());
-//
-//        residualV = (tp2 - tp1);
-//        ROS_ERROR_STREAM(residualV.transpose());
-//    }
 
     Rotation = rota.transpose();
     Translation = -rota.transpose() * tran;
@@ -302,16 +284,61 @@ bool MotionEstimator::solveRelativeRT_PNP(const vector<pair<Vector3d, Vector3d>>
     return true;
 }
 
-vector<pair<Vector3d, Vector3d>> MotionEstimator::getInliers(const vector<pair<Vector3d, Vector3d>> &corres, cv::Mat& mask)
+
+bool MotionEstimator::solvePNP_2D_2D(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &Rotation, Vector3d &Translation)
 {
-    assert(mask.rows == corres.size()); 
+    vector<cv::Point2f> ll, rr;
+    for (int i = 0; i < int(corres.size()); i++)
+    {
+        ll.push_back(cv::Point2f(corres[i].first(0), corres[i].first(1)));
+        rr.push_back(cv::Point2f(corres[i].second(0), corres[i].second(1)));
+    }
+    cv::Mat mask;
+    cv::Mat E = cv::findFundamentalMat(ll, rr, cv::FM_RANSAC, 1.0 / 460, 0.99, mask);
+    cv::Mat cameraMatrix = (cv::Mat_<double>(3, 3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
+    cv::Mat rot, trans;
+    int inlier_cnt = cv::recoverPose(E, ll, rr, cameraMatrix, rot, trans, mask);
+    // cout << "solve_5pts.cpp: in solveRelativeRT(): inlier_cnt " << inlier_cnt << endl;
 
-    vector<pair<Vector3d, Vector3d>> ret;
-    for(int i=0; i<corres.size(); i++){
+    Eigen::Matrix3d R;
+    Eigen::Vector3d T;
+    for (int i = 0; i < 3; i++)
+    {   
+        T(i) = trans.at<double>(i, 0);
+        for (int j = 0; j < 3; j++)
+            R(i, j) = rot.at<double>(i, j);
+    }
 
-        if(mask.at<unsigned char>(i,0) == 0) continue; 
-        
-        ret.push_back(make_pair(corres[i].first, corres[i].second)); 
-    } 
-    return ret; 
+    Rotation = R.transpose();
+    Translation = -R.transpose() * T;
+    return true;
+}
+
+bool MotionEstimator::solvePNP_3D_2D(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &Rotation, Vector3d &Translation)
+{
+    vector<cv::Point3f> lll;
+    vector<cv::Point2f> rr;
+    for (int i = 0;  i< int(corres.size()); i++)
+    {
+        if (corres[i].first(2) >0 && corres[i].second(2) >0 ) {
+            lll.push_back(cv::Point3f(corres[i].first(0)*corres[i].first(2), corres[i].first(1)*corres[i].first(2), corres[i].first(2)));
+            rr.push_back(cv::Point2f(corres[i].second(0) , corres[i].second(1) ));
+        }
+    }
+    cv::Mat rvec,tvec;
+    cv::Mat cameraMatrix = (cv::Mat_<double>(3, 3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
+
+    // cv::solvePnPRansac(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, 100, 1.0/460, 0.99,
+    //                   inliersArr, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
+
+    cv::solvePnP(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
+
+    // cout<<"solve_5pts.cpp: ---------------3d-2d----------------"<<endl; 
+    Vector3d tran(tvec.at<double>(0, 0), tvec.at<double>(1, 0), tvec.at<double>(2, 0));
+    Matrix3d rota = SO3(rvec.at<double>(0, 0), rvec.at<double>(1, 0), rvec.at<double>(2, 0)).matrix();
+
+    Rotation = rota.transpose();
+    Translation = -rota.transpose() * tran;
+
+    return true;
 }
