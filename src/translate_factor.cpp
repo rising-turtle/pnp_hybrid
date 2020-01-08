@@ -59,8 +59,8 @@ bool TranslateFactor::Evaluate(double const *const *parameters, double *residual
 
 	// weight 
 	Eigen::Matrix2d W = Eigen::Matrix2d::Identity(); 
-	W(0,0) = sqrt(dr_dx * cov_pt_xi * dr_dx.transpose()); 
-	W(1,1) = sqrt(dr_dy * cov_pt_xi * dr_dy.transpose()); 
+	W(0,0) = 1./sqrt(dr_dx * cov_pt_xi * dr_dx.transpose()); 
+	W(1,1) = 1./sqrt(dr_dy * cov_pt_xi * dr_dy.transpose()); 
 
 	residual = A*T - b; 
 	residual = W * residual;

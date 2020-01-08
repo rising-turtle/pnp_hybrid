@@ -8,6 +8,29 @@
 
 #include "solve_translate.h"
 #include "translate_factor.h"
+#include "utility.h"
+
+namespace{
+
+	// based on the 
+	void compute_cov(Matrix3d& cov, Vector3d& pt){
+
+		static poly std_poly; 
+
+		double sig_z = std_poly.y(pt.z()); 
+
+		Vector3d np(pt.x(), pt.y(), 1); 
+		cov = SQ(sig_z)*np*np.transpose();
+
+		double sig_u = (1./460); // 1 pixel deviation
+		double sig_v = (1./460); 
+
+		cov(0,0) += SQ(pt.z())*SQ(sig_u); 
+		cov(1,1) += SQ(pt.z())*SQ(sig_v); 
+		return ; 
+	}
+
+}
 
 SolveTranslate::SolveTranslate(){}
 
@@ -32,6 +55,8 @@ bool SolveTranslate::solveTCeres(const vector<pair<Vector3d, Vector3d>> &corres,
 
     	Vector3d pti = corres[i].first; 
     	Vector3d ptj = corres[i].second; 
+
+    	compute_cov(cov_pti, pti); 
 
     	pti.x() *= pti.z(); 
     	pti.y() *= pti.z();

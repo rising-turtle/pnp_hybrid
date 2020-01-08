@@ -13,26 +13,10 @@
 #include <vector>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include "utility.h"
 
 using namespace std; 
 using namespace Eigen; 
-
-struct poly{
-	poly(double para[3]){
-		a1 = para[0]; a2 = para[1]; a3 = para[2]; 
-	}
-	poly(){
-	    // default struct_core depth's variance w.r.t. depth  
-	    a1 = 0.00155816; a2 = -0.00362021; a3 = 0.00452812;
-	}
-	double y(double x){
-		if(x <= 0.75)
-			return 0.0007;
-		return (a1*x*x + a2*x+a3);
-	}
-	double a1,a2,a3;
-	int r,c; 
-};
 
 class SimCorr
 {
