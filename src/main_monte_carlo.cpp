@@ -9,6 +9,7 @@
 #include "solve_5pts.h"
 #include "solve_translate.h"
 #include "utility.h"
+#include "opt_solver.h"
 #include <Eigen/Core>
 #include <cmath>
 #include <sstream>
@@ -30,13 +31,13 @@ pair<double, double> run_once_hybrid(vector<pair<Vector3d, Vector3d>>& corres, i
 vector<double> run_once_together(vector<pair<Vector3d, Vector3d>>& corres, int cnt_3d, int cnt_2d, 
     Matrix3d& Rij_gt, Vector3d& tij_gt);
 
-void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d = 40, int TIMES = 10); 
+void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d = 30, int TIMES = 10); 
 
 int main(int argc, char* argv[])
 {
-    // vector<int> v3d{4, 7, 10, 15, 20, 25, 30, 35, 40}; 
-    vector<int> v3d{30}; 
-    run_monte_carlo(v3d, 40, 50); 
+    vector<int> v3d{4, 6, 8, 10, 12, 15, 20, 25, 30}; 
+    // vector<int> v3d{30}; 
+    run_monte_carlo(v3d, 30, 500); 
 
     return 0; 
 }
@@ -141,12 +142,15 @@ vector<double> run_once_together(vector<pair<Vector3d, Vector3d>>& corres, int c
     SolveTranslate st; 
     Eigen::Vector3d ntij = tij_e_h; 
     tij_e_h = tij_e_t; // use 3d-2d results as initial value 
-    // st.solveTCeres(in_3d, Rij_e_h, tij_e_h); 
+    st.solveTCeres(in_3d, Rij_e_h, tij_e_h); 
     // st.solveTProjCeres(in_3d, Rij_e_h, tij_e_h);
     // st.solveTScaleCeres(in_3d, Rij_e_h, ntij, tij_e_h); 
     // st.solveTProjScaleCeres(in_3d, Rij_e_h, ntij, tij_e_h); 
     // st.solveTCeresWithPt(in_3d, Rij_e_h, tij_e_h); 
-    st.solveTProjCeresWithPt(in_3d, Rij_e_h, tij_e_h); 
+    // st.solveTProjCeresWithPt(in_3d, Rij_e_h, tij_e_h); 
+
+    OptSolver opt; 
+    opt.solveCeres(in_3d, Rij_e_h, tij_e_h); 
 
     // compute error 
     Matrix3d dR_h = Rij_gt.transpose()*Rij_e_h; 
@@ -154,8 +158,6 @@ vector<double> run_once_together(vector<pair<Vector3d, Vector3d>>& corres, int c
 
     double et_h = dt_h.norm(); 
     double ea_h = computeAngle(dR_h); 
-
- 
 
     Matrix3d dR_t = Rij_gt.transpose()*Rij_e_t; 
     Vector3d dt_t = tij_gt - tij_e_t; 
