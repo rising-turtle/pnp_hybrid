@@ -81,11 +81,13 @@ vector<pair<Vector3d, Vector3d>> getInliersIndex(const vector<pair<Vector3d, Vec
 }     
 
 
-double sum_error(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d& Rij, Vector3d& tij)
+double sum_error(const vector<pair<Vector3d, Vector3d>> &corres, const Matrix3d& Rij, const Vector3d& tij)
 {
 	double ret = 0; 
 	Matrix3d Rji = Rij.transpose(); 
 	Vector3d tji = -Rji*tij; 
+
+	// cout<<"Rij: "<<endl<<Rij<<endl<<tij.transpose()<<endl; 
 
 	int N = corres.size(); 
 	for(int i=0; i<corres.size(); i++){
@@ -97,8 +99,12 @@ double sum_error(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d& Rij, 
     	pti.y() *= pti.z();
 
     	Vector3d pti_j = Rji*pti + tji; 
+    	pti_j.x() /= pti_j.z(); 
+    	pti_j.y() /= pti_j.z(); 
     	Vector2d err(pti_j.x() - ptj.x(), pti_j.y() - ptj.y()); 
+    	// err = err * pti_j.z();
     	ret += err.norm(); 
+    	// cout <<" in sum_error i: "<<i<<" err: "<<err.transpose()<<" err.norm: "<<err.norm()<<endl; 
 	}
 	return ret; 
 }

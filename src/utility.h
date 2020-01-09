@@ -29,7 +29,7 @@ extern pair<double, double> getMeanStd(vector<double>& data);
 extern vector<pair<Vector3d, Vector3d>> getInliers(const vector<pair<Vector3d, Vector3d>> &corres, cv::Mat& mask);     
 extern vector<pair<Vector3d, Vector3d>> getInliersIndex(const vector<pair<Vector3d, Vector3d>> &corres, cv::Mat& mask);     
 
-extern double sum_error(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d& Rij, Vector3d& tij); 
+extern double sum_error(const vector<pair<Vector3d, Vector3d>> &corres, const Matrix3d& Rij, const Vector3d& tij); 
 
 struct poly{
 	poly(double para[3]){

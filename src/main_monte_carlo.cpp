@@ -34,7 +34,8 @@ void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d = 40, int TIMES = 10);
 
 int main(int argc, char* argv[])
 {
-    vector<int> v3d{4, 7, 10, 15, 20, 25, 30, 35, 40}; 
+    // vector<int> v3d{4, 7, 10, 15, 20, 25, 30, 35, 40}; 
+    vector<int> v3d{30}; 
     run_monte_carlo(v3d, 40, 50); 
 
     return 0; 
@@ -69,8 +70,8 @@ void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d, int TIMES)
 
     vector<pair<Vector3d, Vector3d>> corrs = sim.find_corrs(R, t);
 
-    ouf<<"Num_of_3d "<<"\t"<<" Mean: hybrid_trans "<<"\t"<<" hybrid_rot "<<"\t"<<" 3d_2d_trans "<<"\t"<<" 3d_2d_rot "<<
-    "\t"<<" Std: hybrid_trans "<<"\t"<<" hybrid_rot "<<"\t"<<" 3d_2d_trans "<<"\t"<<" 3d_2d_rot"<<endl; 
+    ouf<<"Num_of_3d "<<"\t"<<" hybrid_trans "<<"\t"<<" hybrid_rot "<<"\t"<<" 3d_2d_trans "<<"\t"<<" 3d_2d_rot "<<
+    "\t"<<" hybrid_trans "<<"\t"<<" hybrid_rot "<<"\t"<<" 3d_2d_trans "<<"\t"<<" 3d_2d_rot"<<endl; 
 
     for(int j=0; j<v_cnt_3d.size(); j++){
         int cnt_3d = v_cnt_3d[j]; 
@@ -140,10 +141,12 @@ vector<double> run_once_together(vector<pair<Vector3d, Vector3d>>& corres, int c
     SolveTranslate st; 
     Eigen::Vector3d ntij = tij_e_h; 
     tij_e_h = tij_e_t; // use 3d-2d results as initial value 
-    st.solveTCeres(in_3d, Rij_e_h, tij_e_h); 
+    // st.solveTCeres(in_3d, Rij_e_h, tij_e_h); 
+    // st.solveTProjCeres(in_3d, Rij_e_h, tij_e_h);
     // st.solveTScaleCeres(in_3d, Rij_e_h, ntij, tij_e_h); 
+    // st.solveTProjScaleCeres(in_3d, Rij_e_h, ntij, tij_e_h); 
     // st.solveTCeresWithPt(in_3d, Rij_e_h, tij_e_h); 
-    // st.solveTCeresWithPt(in_3d, Rij_e_h, tij_e_h); 
+    st.solveTProjCeresWithPt(in_3d, Rij_e_h, tij_e_h); 
 
     // compute error 
     Matrix3d dR_h = Rij_gt.transpose()*Rij_e_h; 
