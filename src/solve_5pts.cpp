@@ -258,7 +258,8 @@ bool MotionEstimator::solveRelativeRT(const vector<pair<Vector3d, Vector3d>> &co
     return false;
 }
 
-bool MotionEstimator::solveRelativeRT_PNP(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &Rotation, Vector3d &Translation, cv::Mat& mask)
+bool MotionEstimator::solveRelativeRT_PNP(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &Rotation, Vector3d &Translation, cv::Mat& mask, 
+    cv::Mat* prec, cv::Mat* ptec)
 {
     vector<cv::Point3f> lll;
     vector<cv::Point2f> rr;
@@ -275,7 +276,7 @@ bool MotionEstimator::solveRelativeRT_PNP(const vector<pair<Vector3d, Vector3d>>
     // cv::solvePnPRansac(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, 100, 0.3/460, 0.99,
     //                   mask, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
     cv::solvePnPRansac(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, 100, 2./460, 0.99,
-                       mask, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
+                       mask, CV_EPNP);//cv::SOLVEPNP_ITERATIVE maybe don't need 100times
 
     // cout<<"solve_5pts.cpp: ---------------3d-2d----------------"<<endl; 
     Vector3d tran(tvec.at<double>(0, 0), tvec.at<double>(1, 0), tvec.at<double>(2, 0));
@@ -283,6 +284,9 @@ bool MotionEstimator::solveRelativeRT_PNP(const vector<pair<Vector3d, Vector3d>>
 
     Rotation = rota.transpose();
     Translation = -rota.transpose() * tran;
+
+    if(prec != NULL) {*prec = rvec;}
+    if(ptec != NULL) {*ptec = tvec;}
 
     return true;
 }
@@ -335,6 +339,36 @@ bool MotionEstimator::solvePNP_3D_2D(const vector<pair<Vector3d, Vector3d>> &cor
     //                   inliersArr, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
 
     cv::solvePnP(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, CV_EPNP);//maybe don't need 100times
+
+    // cout<<"solve_5pts.cpp: ---------------3d-2d----------------"<<endl; 
+    Vector3d tran(tvec.at<double>(0, 0), tvec.at<double>(1, 0), tvec.at<double>(2, 0));
+    Matrix3d rota = SO3(rvec.at<double>(0, 0), rvec.at<double>(1, 0), rvec.at<double>(2, 0)).matrix();
+
+    Rotation = rota.transpose();
+    Translation = -rota.transpose() * tran;
+
+    return true;
+}
+
+
+bool MotionEstimator::solvePNP_3D_2D_given_rt(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &Rotation, Vector3d &Translation, cv::Mat& rvec, cv::Mat& tvec)
+{
+    vector<cv::Point3f> lll;
+    vector<cv::Point2f> rr;
+    for (int i = 0;  i< int(corres.size()); i++)
+    {
+        if (corres[i].first(2) >0 && corres[i].second(2) >0 ) {
+            lll.push_back(cv::Point3f(corres[i].first(0)*corres[i].first(2), corres[i].first(1)*corres[i].first(2), corres[i].first(2)));
+            rr.push_back(cv::Point2f(corres[i].second(0) , corres[i].second(1) ));
+        }
+    }
+    // cv::Mat rvec,tvec;
+    cv::Mat cameraMatrix = (cv::Mat_<double>(3, 3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
+
+    // cv::solvePnPRansac(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, 100, 1.0/460, 0.99,
+    //                   inliersArr, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
+
+    cv::solvePnP(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, true, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
 
     // cout<<"solve_5pts.cpp: ---------------3d-2d----------------"<<endl; 
     Vector3d tran(tvec.at<double>(0, 0), tvec.at<double>(1, 0), tvec.at<double>(2, 0));

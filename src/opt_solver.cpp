@@ -63,11 +63,11 @@ bool OptSolver::solveCeres(const vector<pair<Vector3d, Vector3d>> &corres, const
 
 	ceres::Solver::Options options;
 	options.linear_solver_type = ceres::DENSE_SCHUR;
-	options.minimizer_progress_to_stdout = true;
+	// options.minimizer_progress_to_stdout = true;
 	options.max_solver_time_in_seconds = 0.2;
 	ceres::Solver::Summary summary;
 	ceres::Solve(options, &problem, &summary);
-	cout << summary.BriefReport() << endl;
+	// cout << summary.BriefReport() << endl;
 
 	qji.w() = m_qji[0][0]; 
 	qji.x() = m_qji[0][1]; 

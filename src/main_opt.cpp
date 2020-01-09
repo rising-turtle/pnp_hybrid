@@ -25,7 +25,7 @@ void print_err(string pre, Matrix3d& Re, Vector3d& te, Matrix3d& Rg, Vector3d& t
 
 int main(int argc, char* argv[])
 {
-	
+
     run_opt(); 
 
     return 0; 
@@ -50,7 +50,7 @@ void run_opt()
     Eigen::Quaternion<double> q = yawAngle * pitchAngle * rollAngle; 
     Eigen::Matrix3d Rij = q.matrix();
 
-    cout<<"ground truth Rij: "<<endl<<Rij<<endl; 
+    // cout<<"ground truth Rij: "<<endl<<Rij<<endl; 
     
     Vector3d tij(0.2, 0.05, 0.3); 
 
@@ -58,7 +58,6 @@ void run_opt()
     Vector3d t = -Rij.transpose()*tij; 
 
     vector<pair<Vector3d, Vector3d>> corrs = sim.find_corrs(R, t);
-    vector<pair<Vector3d, Vector3d>> corrs_noise = sim.add_noise(corrs); 
            
     // 3d-2d 
     MotionEstimator me;
@@ -66,24 +65,37 @@ void run_opt()
     Matrix3d Rij_e; //, Rij_e_t;
     Vector3d tij_e; // tij_e_t; 
     cv::Mat mask; 
+   	Matrix3d R2; //, Rij_e_t;
+	Vector3d t2; // tij_e_t; 
 
     int cnt_3d = 20; 
+	OptSolver opt_solver; 
 
     // 3d-2d 
-    me.solveRelativeRT_PNP(corrs_noise, Rij_e, tij_e, mask);
-    Vector3d ea = Rij_e.eulerAngles(2, 1, 0); 
+    cv::Mat rvec, tvec; 
 
-    vector<pair<Vector3d, Vector3d>> inliers_3d = getInliersIndex(corrs_noise, mask); 
-    vector<pair<Vector3d, Vector3d>> in_3d = getN(inliers_3d, cnt_3d); 
+    for(int i=0; i<10; i++){
 
-    // compute 3d-2d transformation 
-    me.solvePNP_3D_2D(in_3d, Rij_e, tij_e); 
-    print_err("3D_2D: ", Rij_e, tij_e, Rij, tij); 
+    	cout<<"times: "<<i<<endl; 
+    	vector<pair<Vector3d, Vector3d>> corrs_noise = sim.add_noise(corrs); 
 
-    OptSolver opt_solver; 
-    opt_solver.solveCeres(in_3d, Rij_e, tij_e); 
-    print_err("Opt: ",  Rij_e, tij_e, Rij, tij);
+	    me.solveRelativeRT_PNP(corrs_noise, Rij_e, tij_e, mask, &rvec, &tvec);
+	    print_err("3D_2D EPNP: ", Rij_e, tij_e, Rij, tij); 
 
+	    vector<pair<Vector3d, Vector3d>> inliers_3d = getInliersIndex(corrs_noise, mask); 
+	    vector<pair<Vector3d, Vector3d>> in_3d = getN(inliers_3d, cnt_3d); 
+
+	    // compute 3d-2d transformation 
+	    // me.solvePNP_3D_2D(in_3d, Rij_e, tij_e); 
+
+	    me.solvePNP_3D_2D_given_rt(in_3d, R2, t2, rvec, tvec); 
+	    print_err("3D_2D iterative: ", R2, t2, Rij, tij); 
+
+    	opt_solver.solveCeres(in_3d, Rij_e, tij_e); 
+    	print_err("Opt: ",  Rij_e, tij_e, Rij, tij);
+
+    	cout<<endl<<endl;
+	}
     return ; 
 
 }
