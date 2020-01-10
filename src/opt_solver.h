@@ -65,7 +65,7 @@ public:
 	OptSolver();
 
 	// notice here corres must be inliers 
-	bool solveCeres(const vector<pair<Vector3d, Vector3d>> &corres, const Matrix3d &Rij, Vector3d &tv);
+	bool solveCeres(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &Rij, Vector3d &tv);
 
 	// camera pose 
 	double m_tji[1][3]; 
