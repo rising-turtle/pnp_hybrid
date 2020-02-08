@@ -1,4 +1,4 @@
-Num_of_3d 	 hybrid_trans 	 hybrid_rot 	 3d_2d_trans 	 3d_2d_rot 	 hybrid_trans 	 hybrid_rot 	 3d_2d_trans 	 3d_2d_rot
+Num_of_3d 	 hybrid_trans_mean 	 hybrid_rot_mean 	 3d_2d_trans_mean 	 3d_2d_rot_mean 	 hybrid_trans_std 	 hybrid_rot_std 	 3d_2d_trans_std 	 3d_2d_rot_std	 hybrid_prj_err	 3d_2d_prj_err
 4 	 0.0177708 	 0.00377627 	 0.0405175 	 0.0186202 	 0.0123189 	 0.00202767 	 0.108721 	 0.0321311
 6 	 0.0152522 	 0.00375977 	 0.0171318 	 0.0143688 	 0.00996168 	 0.00207288 	 0.0155203 	 0.00238528
 8 	 0.0153427 	 0.00385754 	 0.0142266 	 0.0143573 	 0.0105819 	 0.00227919 	 0.00902202 	 0.00238182
