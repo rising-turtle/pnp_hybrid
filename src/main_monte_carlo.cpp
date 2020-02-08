@@ -112,7 +112,8 @@ void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d, int TIMES)
         pair<double, double> t_proj = getMeanStd(prj_te);
 
         ouf<<cnt_3d<<" \t "<<h_trans.first<<" \t "<<h_rot.first<<" \t "<<t_trans.first<<" \t "<<t_rot.first<<" \t "<<
-            h_trans.second<<" \t "<<h_rot.second<<" \t "<<t_trans.second<<" \t "<<t_rot.second<<endl;
+            h_trans.second<<" \t "<<h_rot.second<<" \t "<<t_trans.second<<" \t "<<t_rot.second<<" \t "<<h_proj.first<<
+            " \t "<<t_proj.first<<endl;
        //  vector<pair<double, double>> ret(4); 
         // ret[0] = h_trans; ret[1] = h_rot; ret[2] = t_trans; ret[3] = t_rot; 
     }
@@ -174,11 +175,11 @@ vector<double> run_once_together(vector<pair<Vector3d, Vector3d>>& corres, int c
     double ea_t = computeAngle(dR_t); 
 
 
-    cout<<"T_3d_2d err: "<<sum_error(in_3d, Rij_e_h, tij_e_t)<<" T_gt err: "<<sum_error(in_3d, Rij_e_h, tij_gt)<<
+    cout<<"T_3d_2d err: "<<sum_error(in_3d, Rij_e_t, tij_e_t)<<" T_gt err: "<<sum_error(in_3d, Rij_gt, tij_gt)<<
         " T_hybrid err: "<<sum_error(in_3d, Rij_e_h, tij_e_h)<<endl; 
 
     double prj_he = sum_error(in_3d, Rij_e_h, tij_e_h);
-    double prj_te = sum_error(in_3d, Rij_e_h, tij_e_t); 
+    double prj_te = sum_error(in_3d, Rij_e_t, tij_e_t); 
         
     vector<double> ret{et_h, ea_h, et_t, ea_t, prj_he, prj_te}; 
 
