@@ -71,12 +71,14 @@ void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d, int TIMES)
 
     vector<pair<Vector3d, Vector3d>> corrs = sim.find_corrs(R, t);
 
-    ouf<<"Num_of_3d "<<"\t"<<" hybrid_trans "<<"\t"<<" hybrid_rot "<<"\t"<<" 3d_2d_trans "<<"\t"<<" 3d_2d_rot "<<
-    "\t"<<" hybrid_trans "<<"\t"<<" hybrid_rot "<<"\t"<<" 3d_2d_trans "<<"\t"<<" 3d_2d_rot"<<endl; 
+    ouf<<"Num_of_3d "<<"\t"<<" hybrid_trans_mean "<<"\t"<<" hybrid_rot_mean "<<"\t"<<" 3d_2d_trans_mean "<<"\t"<<" 3d_2d_rot_mean "<<
+    "\t"<<" hybrid_trans_std "<<"\t"<<" hybrid_rot_std "<<"\t"<<" 3d_2d_trans_std "<<"\t"<<" 3d_2d_rot_std"<<"\t"<<
+    " hybrid_prj_err"<<"\t"<<" 3d_2d_prj_err"<<endl; 
 
     for(int j=0; j<v_cnt_3d.size(); j++){
         int cnt_3d = v_cnt_3d[j]; 
         vector<double> h_et, h_ea, t_et, t_ea; 
+        vector<double> prj_he, prj_te; 
         for(int cnt = 0; cnt < TIMES; cnt++){
             vector<pair<Vector3d, Vector3d>> corrs_noise = sim.add_noise(corrs); 
             // pair<double, double> hybrid_err = run_once_hybrid(corrs_noise, cnt_3d, cnt_2d, Rij, tij); 
@@ -90,6 +92,9 @@ void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d, int TIMES)
                 t_et.push_back(err[2]); 
             if(err[3] < D2R(30))
                 t_ea.push_back(err[3]); 
+            prj_he.push_back(err[4]); 
+            if(err[2] < 2. && err[3] < D2R(30))
+                prj_te.push_back(err[5]); 
 
             // cout<<"cnt: "<<cnt<<" hybrid error: trans: "<<hybrid_err.first<<" angle: "<<hybrid_err.second<<" 3d-2d error: trans: "<<
             //     t32_err.first<<" angle: "<< t32_err.second<<endl;
@@ -101,8 +106,10 @@ void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d, int TIMES)
         // compute mean and std 
         pair<double, double> h_trans = getMeanStd(h_et); 
         pair<double, double> h_rot = getMeanStd(h_ea); 
+        pair<double, double> h_proj = getMeanStd(prj_he); 
         pair<double, double> t_trans = getMeanStd(t_et); 
         pair<double, double> t_rot = getMeanStd(t_ea); 
+        pair<double, double> t_proj = getMeanStd(prj_te);
 
         ouf<<cnt_3d<<" \t "<<h_trans.first<<" \t "<<h_rot.first<<" \t "<<t_trans.first<<" \t "<<t_rot.first<<" \t "<<
             h_trans.second<<" \t "<<h_rot.second<<" \t "<<t_trans.second<<" \t "<<t_rot.second<<endl;
@@ -149,6 +156,7 @@ vector<double> run_once_together(vector<pair<Vector3d, Vector3d>>& corres, int c
     // st.solveTCeresWithPt(in_3d, Rij_e_h, tij_e_h); 
     // st.solveTProjCeresWithPt(in_3d, Rij_e_h, tij_e_h); 
 
+    // not optimize it now 
     OptSolver opt; 
     opt.solveCeres(in_3d, Rij_e_h, tij_e_h); 
 
@@ -169,8 +177,10 @@ vector<double> run_once_together(vector<pair<Vector3d, Vector3d>>& corres, int c
     cout<<"T_3d_2d err: "<<sum_error(in_3d, Rij_e_h, tij_e_t)<<" T_gt err: "<<sum_error(in_3d, Rij_e_h, tij_gt)<<
         " T_hybrid err: "<<sum_error(in_3d, Rij_e_h, tij_e_h)<<endl; 
 
-
-    vector<double> ret{et_h, ea_h, et_t, ea_t}; 
+    double prj_he = sum_error(in_3d, Rij_e_h, tij_e_h);
+    double prj_te = sum_error(in_3d, Rij_e_h, tij_e_t); 
+        
+    vector<double> ret{et_h, ea_h, et_t, ea_t, prj_he, prj_te}; 
 
     return ret; 
 }
