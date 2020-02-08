@@ -12,7 +12,7 @@
 OptSolver::OptSolver(){}
 
 
-bool OptSolver::solveCeres(const vector<pair<Vector3d, Vector3d>> &corres, const Matrix3d &Rij, Vector3d &tij)
+bool OptSolver::solveCeres(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &Rij, Vector3d &tij)
 {
 
 	cout<<"before opt: tij: "<<tij.transpose()<<endl; 
@@ -80,6 +80,8 @@ bool OptSolver::solveCeres(const vector<pair<Vector3d, Vector3d>> &corres, const
 	tji.z() = m_tji[0][2]; 
 	tij = qij * tji;
 	tij*=-1.;
+
+	Rij = qij.toRotationMatrix();
 
 	cout<<"after opt: tij: "<<tij.transpose()<<endl; 
 	cout<<"sum err: "<<sum_error(corres, Rij, tij)<<endl; 
