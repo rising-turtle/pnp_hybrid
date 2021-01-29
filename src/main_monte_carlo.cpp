@@ -35,9 +35,9 @@ void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d = 30, int TIMES = 10);
 
 int main(int argc, char* argv[])
 {
-    vector<int> v3d{4, 6, 8, 10, 12, 15, 20, 25, 30}; 
-    // vector<int> v3d{30}; 
-    run_monte_carlo(v3d, 30, 500); 
+    // vector<int> v3d{4, 6, 8, 10, 12, 15, 20, 25, 30}; 
+    vector<int> v3d{8}; 
+    run_monte_carlo(v3d, 30, 50); 
 
     return 0; 
 }
@@ -111,6 +111,8 @@ void run_monte_carlo(vector<int> v_cnt_3d, int cnt_2d, int TIMES)
         pair<double, double> t_rot = getMeanStd(t_ea); 
         pair<double, double> t_proj = getMeanStd(prj_te);
 
+        cout<<cnt_3d<<" \t hybrid_te "<<" \t hybrid_re \t EPNP_te "<<" \t EPNP_re "<<endl;
+        cout<<cnt_3d<<" \t "<<h_trans.first<<" \t "<<h_rot.first<<" \t "<<t_trans.first<<" \t "<<t_rot.first<<endl;
         ouf<<cnt_3d<<" \t "<<h_trans.first<<" \t "<<h_rot.first<<" \t "<<t_trans.first<<" \t "<<t_rot.first<<" \t "<<
             h_trans.second<<" \t "<<h_rot.second<<" \t "<<t_trans.second<<" \t "<<t_rot.second<<" \t "<<h_proj.first<<
             " \t "<<t_proj.first<<endl;
@@ -158,8 +160,8 @@ vector<double> run_once_together(vector<pair<Vector3d, Vector3d>>& corres, int c
     // st.solveTProjCeresWithPt(in_3d, Rij_e_h, tij_e_h); 
 
     // not optimize it now 
-    OptSolver opt; 
-    opt.solveCeres(in_3d, Rij_e_h, tij_e_h); 
+    // OptSolver opt; 
+    // opt.solveCeres(in_3d, Rij_e_h, tij_e_h); 
 
     // compute error 
     Matrix3d dR_h = Rij_gt.transpose()*Rij_e_h; 

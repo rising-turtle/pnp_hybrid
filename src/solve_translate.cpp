@@ -71,7 +71,7 @@ bool SolveTranslate::solveTCeres(const vector<pair<Vector3d, Vector3d>> &corres,
 
     	ceres::ResidualBlockId fid = problem.AddResidualBlock(f, NULL, para_T[0]); 
 
-    	if(i>=0){
+    	if(0 && i>=0){
     	 	 vector<double*>* para = new vector<double*>; 
     	 	 problem.GetParameterBlocksForResidualBlock(fid, para); 
              vector<double> res(2); 
@@ -81,13 +81,13 @@ bool SolveTranslate::solveTCeres(const vector<pair<Vector3d, Vector3d>> &corres,
     	 }
     }
 
-    cout<<"ini_sum_err: "<<ini_sum_err<<" ceres_sum_err: "<<ceres_sum_err<<endl;
+    // cout<<"ini_sum_err: "<<ini_sum_err<<" ceres_sum_err: "<<ceres_sum_err<<endl;
 
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::DENSE_SCHUR;
     options.trust_region_strategy_type = ceres::DOGLEG;
     options.max_num_iterations = 20;
-    options.minimizer_progress_to_stdout = true;
+    options.minimizer_progress_to_stdout = false ; // true;
     // options.max_solver_time_in_seconds = SOLVER_TIME; 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);

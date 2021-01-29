@@ -1,5 +1,7 @@
 #include "solve_5pts.h"
 #include <iostream>
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/eigen.hpp>
 #include <sophus/se3.hpp>
 #include <sophus/so3.hpp>
 using Sophus::SE3;
@@ -280,7 +282,12 @@ bool MotionEstimator::solveRelativeRT_PNP(const vector<pair<Vector3d, Vector3d>>
 
     // cout<<"solve_5pts.cpp: ---------------3d-2d----------------"<<endl; 
     Vector3d tran(tvec.at<double>(0, 0), tvec.at<double>(1, 0), tvec.at<double>(2, 0));
-    Matrix3d rota = SO3(rvec.at<double>(0, 0), rvec.at<double>(1, 0), rvec.at<double>(2, 0)).matrix();
+    
+    cv::Mat tmp_r; 
+    Matrix3d rota ; 
+    cv::Rodrigues(rvec, tmp_r); 
+    cv::cv2eigen(tmp_r, rota); 
+    // Matrix3d rota = SO3(rvec.at<double>(0, 0), rvec.at<double>(1, 0), rvec.at<double>(2, 0)).matrix();
 
     Rotation = rota.transpose();
     Translation = -rota.transpose() * tran;
@@ -342,7 +349,11 @@ bool MotionEstimator::solvePNP_3D_2D(const vector<pair<Vector3d, Vector3d>> &cor
 
     // cout<<"solve_5pts.cpp: ---------------3d-2d----------------"<<endl; 
     Vector3d tran(tvec.at<double>(0, 0), tvec.at<double>(1, 0), tvec.at<double>(2, 0));
-    Matrix3d rota = SO3(rvec.at<double>(0, 0), rvec.at<double>(1, 0), rvec.at<double>(2, 0)).matrix();
+    // Matrix3d rota = SO3(rvec.at<double>(0, 0), rvec.at<double>(1, 0), rvec.at<double>(2, 0)).matrix();
+    cv::Mat tmp_r; 
+    Matrix3d rota ; 
+    cv::Rodrigues(rvec, tmp_r); 
+    cv::cv2eigen(tmp_r, rota); 
 
     Rotation = rota.transpose();
     Translation = -rota.transpose() * tran;
@@ -372,7 +383,12 @@ bool MotionEstimator::solvePNP_3D_2D_given_rt(const vector<pair<Vector3d, Vector
 
     // cout<<"solve_5pts.cpp: ---------------3d-2d----------------"<<endl; 
     Vector3d tran(tvec.at<double>(0, 0), tvec.at<double>(1, 0), tvec.at<double>(2, 0));
-    Matrix3d rota = SO3(rvec.at<double>(0, 0), rvec.at<double>(1, 0), rvec.at<double>(2, 0)).matrix();
+    // Matrix3d rota = SO3(rvec.at<double>(0, 0), rvec.at<double>(1, 0), rvec.at<double>(2, 0)).matrix();
+
+    cv::Mat tmp_r; 
+    Matrix3d rota ; 
+    cv::Rodrigues(rvec, tmp_r); 
+    cv::cv2eigen(tmp_r, rota); 
 
     Rotation = rota.transpose();
     Translation = -rota.transpose() * tran;
