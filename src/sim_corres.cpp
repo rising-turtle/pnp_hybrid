@@ -10,7 +10,8 @@
 #include <random>
 
 SimCorr::SimCorr(){
-    init(); 
+    // init(); 
+    mg_feats.clear(); 
 }
 SimCorr::~SimCorr(){}
 
@@ -39,13 +40,14 @@ void SimCorr::init(int pix_step)
 	mg_feats.emplace(make_pair(++id, p));
     }
     
-    cout<<"sim_corres.cpp: init "<<id<<" features "<<endl; 
+    // cout<<"sim_corres.cpp: init "<<id<<" features "<<endl; 
 
     return ; 
 }
 
 vector<pair<Vector3d, Vector3d>> SimCorr::find_corrs( Matrix3d& Rji, Vector3d& tji)
 {
+	if(mg_feats.empty()) init(); 
     vector<pair<Vector3d, Vector3d>> ret; 
     map<int, Vector3d>::iterator it = mg_feats.begin();
     while(it != mg_feats.end()){
@@ -116,7 +118,11 @@ vector<pair<Vector3d, Vector3d>> SimCorr::addNoise3D2D( vector<pair<Vector3d, Ve
 		Vector3d pj = corres[i].second; 
 
 		std::normal_distribution<double> dpt_i_gauss(0.0, d_std.y(pi.z())); 
-		double z = pi.z(); //  + dpt_i_gauss(gen); 
+		double z = pi.z() + dpt_i_gauss(gen); 
+
+		pi(0) = pi(0) * z; 
+		pi(1) = pi(1) * z; 
+		pi(2) = z; 
 
 		pi = pi/pi.norm(); 
 		pj = pj/pj.norm(); 
@@ -124,7 +130,9 @@ vector<pair<Vector3d, Vector3d>> SimCorr::addNoise3D2D( vector<pair<Vector3d, Ve
 		pi = addNoiseRay(pix_std, pi); 
 		pj = addNoiseRay(pix_std, pj); 
 		
-		pi = (pi/pi.z()) * z; 
+		pi = pi/pi.z(); 
+		pi(2) = z; 
+		pj = pj/pj.z(); 
 		
 		ret.push_back(make_pair(pi, pj)); 
     }
@@ -177,6 +185,7 @@ Eigen::Vector3d SimCorr::addNoiseRay( double noiseLevel, Eigen::Vector3d cleanPo
        cleanPoint + noiseX *normalVector1 + noiseY * normalVector2;
   noisyPoint = noisyPoint / noisyPoint.norm();
   return noisyPoint;
+  // return cleanPoint;
 
 }
 
