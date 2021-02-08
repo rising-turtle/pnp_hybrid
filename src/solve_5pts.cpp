@@ -345,7 +345,7 @@ bool MotionEstimator::solvePNP_3D_2D(const vector<pair<Vector3d, Vector3d>> &cor
     // cv::solvePnPRansac(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, 100, 1.0/460, 0.99,
     //                   inliersArr, cv::SOLVEPNP_ITERATIVE);//maybe don't need 100times
 
-    cv::solvePnP(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, cv::SOLVEPNP_ITERATIVE);//cv::SOLVEPNP_ITERATIVE );// CV_EPNP maybe don't need 100times
+    cv::solvePnP(lll, rr, cameraMatrix, cv::Mat(), rvec, tvec, false, CV_EPNP);//cv::SOLVEPNP_ITERATIVE );// CV_EPNP maybe don't need 100times
 
     // cout<<"solve_5pts.cpp: ---------------3d-2d----------------"<<endl; 
     Vector3d tran(tvec.at<double>(0, 0), tvec.at<double>(1, 0), tvec.at<double>(2, 0));

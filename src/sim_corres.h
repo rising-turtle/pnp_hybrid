@@ -34,5 +34,10 @@ public:
     // find correspond of the 
     vector<pair<Vector3d, Vector3d>> find_corrs(Matrix3d& R, Vector3d& t); 
 
+    // follow opengv to generate random points 3D-2D style 
+    vector<pair<Vector3d, Vector3d>> addNoise3D2D( vector<pair<Vector3d, Vector3d>>& corres, double pix_std = 0.5/460., poly d_std=poly()); 
+
+    // follow opengv to add noise in the normal plane of the bearingVector 
+    Eigen::Vector3d addNoiseRay( double noiseLevel, Eigen::Vector3d cleanPoint ); 
 };
 

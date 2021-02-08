@@ -68,7 +68,6 @@ vector<pair<Vector3d, Vector3d>> SimCorr::find_corrs( Matrix3d& Rji, Vector3d& t
     return ret; 
 }
 
-
 // add noise to the corresponse features 
 vector<pair<Vector3d, Vector3d>> SimCorr::add_noise( vector<pair<Vector3d, Vector3d>>& corres, double pix_std, poly d_std)
 {
@@ -104,6 +103,81 @@ vector<pair<Vector3d, Vector3d>> SimCorr::add_noise( vector<pair<Vector3d, Vecto
 
 }
 
+// add noise to the corresponse features 
+vector<pair<Vector3d, Vector3d>> SimCorr::addNoise3D2D( vector<pair<Vector3d, Vector3d>>& corres, double pix_std, poly d_std)
+{
+    vector<pair<Vector3d, Vector3d>> ret; 
+    static std::default_random_engine gen;
+    std::normal_distribution<double> pix_gauss(0.0,pix_std);
 
+    for(int i=0; i<corres.size(); i++){
+
+		Vector3d pi = corres[i].first; 
+		Vector3d pj = corres[i].second; 
+
+		std::normal_distribution<double> dpt_i_gauss(0.0, d_std.y(pi.z())); 
+		double z = pi.z(); //  + dpt_i_gauss(gen); 
+
+		pi = pi/pi.norm(); 
+		pj = pj/pj.norm(); 
+
+		pi = addNoiseRay(pix_std, pi); 
+		pj = addNoiseRay(pix_std, pj); 
+		
+		pi = (pi/pi.z()) * z; 
+		
+		ret.push_back(make_pair(pi, pj)); 
+    }
+
+    return ret; 
+
+}
+
+
+Eigen::Vector3d SimCorr::addNoiseRay( double noiseLevel, Eigen::Vector3d cleanPoint )
+{
+  //compute a vector in the normal plane (based on good conditioning)
+  Eigen::Vector3d normalVector1;
+  if(
+      (fabs(cleanPoint[0]) > fabs(cleanPoint[1])) &&
+      (fabs(cleanPoint[0]) > fabs(cleanPoint[2])) )
+  {
+    normalVector1[1] = 1.0;
+    normalVector1[2] = 0.0;
+    normalVector1[0] = -cleanPoint[1]/cleanPoint[0];
+  }
+  else
+  {
+    if(
+        (fabs(cleanPoint[1]) > fabs(cleanPoint[0])) &&
+        (fabs(cleanPoint[1]) > fabs(cleanPoint[2])) )
+    {
+      normalVector1[2] = 1.0;
+      normalVector1[0] = 0.0;
+      normalVector1[1] = -cleanPoint[2]/cleanPoint[1];
+    }
+    else
+    {
+      normalVector1[0] = 1.0;
+      normalVector1[1] = 0.0;
+      normalVector1[2] = -cleanPoint[0]/cleanPoint[2];
+    }
+  }
+
+  normalVector1 = normalVector1 / normalVector1.norm();
+  Eigen::Vector3d normalVector2 = cleanPoint.cross(normalVector1);
+  double noiseX =
+      noiseLevel * (((double) rand())/ ((double) RAND_MAX)-0.5)*2.0 / 1.4142;
+  double noiseY =
+      noiseLevel * (((double) rand())/ ((double) RAND_MAX)-0.5)*2.0 / 1.4142;
+
+  // Eigen::Vector3d noisyPoint =
+  //    800 * cleanPoint + noiseX *normalVector1 + noiseY * normalVector2;
+  Eigen::Vector3d noisyPoint =
+       cleanPoint + noiseX *normalVector1 + noiseY * normalVector2;
+  noisyPoint = noisyPoint / noisyPoint.norm();
+  return noisyPoint;
+
+}
 
 
