@@ -1,7 +1,7 @@
 /*
-    Feb. 7th, 2021, He Zhang, fuyinzh@gmail.com 
+    Feb. 9th, 2021, He Zhang, fuyinzh@gmail.com 
 
-    monte carlo against different noise  
+    monte carlo against different number of points   
 
 */
 
@@ -29,9 +29,9 @@ using namespace opengv;
 
 void print_err(string pre, Matrix3d& Re, Vector3d& te, Matrix3d& Rg, Vector3d& tg); 
 
-bool run_once(double noise, int num, vector<double>& dR_epnp, vector<double>& dt_epnp); 
+bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& dR, vector<double>& dt); 
 
-void run_monte_carlo( vector<double> v_noise, int cnt_points = 10,  int TIMES= 1000) ;
+void run_monte_carlo( vector<int> v_cnt_3d, double noise = 1., int cnt_2d = 30,  int TIMES= 1000) ;
 
 int main(int argc, char* argv[])
 {
@@ -39,24 +39,28 @@ int main(int argc, char* argv[])
     CX = 960; CY = 650; 
     FX = FY = 1460; 
 
-    vector<double> v_noise{0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.6, 3.8, 4.0};
-    run_monte_carlo(v_noise, 20, 2000);
+    vector<int> v_cnt_3d{ 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30};
+    // vector<int> v_cnt_3d{ 10, 20, 28};
+    run_monte_carlo(v_cnt_3d, 2.0, 30, 2000);
     return 0; 
 }
 
 
-void run_monte_carlo( vector<double> v_noise, int cnt_points,  int TIMES)
+void run_monte_carlo( vector<int> v_cnt_3d, double noise, int cnt_2d,  int TIMES)
 {
-    ofstream ouf_epnp("NOISE_EPNP_PT_20.log"); 
-    ofstream ouf_hybrid("NOISE_HYBRID_PT_20.log"); 
+    ofstream ouf_epnp("PT_EPNP_NOISE_20.log"); 
+    ofstream ouf_hybrid("PT_HYBRID_NOISE_20.log"); 
 
-    for(int i=0; i<v_noise.size(); i++){
+    // ofstream ouf_epnp("tmp_epnp.log"); 
+    // ofstream ouf_hybrid("tmp_hybrid.log"); 
+
+    for(int i=0; i<v_cnt_3d.size(); i++){
 
         vector<double> hybrid_et, hybrid_er, epnp_et, epnp_er; 
 
         for(int k=0; k < TIMES; ){
             vector<double> v_dr, v_dt; 
-            if(run_once(v_noise[i], cnt_points, v_dr, v_dt)){
+            if(run_once(noise, v_cnt_3d[i], cnt_2d, v_dr, v_dt)){
                 k++; 
                 epnp_er.push_back(v_dr[0]); 
                 epnp_et.push_back(v_dt[0]);
@@ -71,17 +75,17 @@ void run_monte_carlo( vector<double> v_noise, int cnt_points,  int TIMES)
         pair<double, double> t_trans = getMeanStd(epnp_et); 
         pair<double, double> t_rot = getMeanStd(epnp_er); 
 
-        cout<<"nosie: "<<v_noise[i]<<" epnp mean_re: "<<t_rot.first<<" hybrid mean_re: "<<h_rot.first<<endl
+        cout<<"cnt_3d: "<<v_cnt_3d[i]<<" epnp mean_re: "<<t_rot.first<<" hybrid mean_re: "<<h_rot.first<<endl
             << "epnp mean_te: "<<t_trans.first<<" hybrid mean_te: "<<h_trans.first<<endl; 
 
-        ouf_epnp<<v_noise[i]<<" \t "<<t_trans.first<<" \t "<<t_trans.second<<" \t "<<t_rot.first<<" \t "<<t_rot.second<<endl; 
-        ouf_hybrid<<v_noise[i]<<" \t "<<h_trans.first<<" \t "<<h_trans.second<<" \t "<<h_rot.first<<" \t "<<h_rot.second<<endl; 
+        ouf_epnp<<v_cnt_3d[i]<<" \t "<<t_trans.first<<" \t "<<t_trans.second<<" \t "<<t_rot.first<<" \t "<<t_rot.second<<endl; 
+        ouf_hybrid<<v_cnt_3d[i]<<" \t "<<h_trans.first<<" \t "<<h_trans.second<<" \t "<<h_rot.first<<" \t "<<h_rot.second<<endl; 
     }
     ouf_epnp.close(); 
     ouf_hybrid.close(); 
 }
 
-bool run_once(double noise, int num, vector<double>& v_dR, vector<double>& v_dt)
+bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& v_dR, vector<double>& v_dt)
 {
     SimCorr sim; 
 
@@ -135,15 +139,19 @@ bool run_once(double noise, int num, vector<double>& v_dR, vector<double>& v_dt)
     Matrix3d Rij_e, Rji_e; //, Rij_e_t;
     Vector3d tij_e, tji_e; // tij_e_t; 
 
-    int cnt_3d = num; 
     OptSolver opt_solver; 
 
     {
         // cout<<"times: "<<i<<endl; 
         vector<pair<Vector3d, Vector3d>> corrs_noise = sim.addNoise3D2D(corrs, noise/FX); 
 
-        // vector<pair<Vector3d, Vector3d>> in_2d = getN(corrs_noise, cnt_2d); 
         vector<pair<Vector3d, Vector3d>> in_3d = getN(corrs_noise, cnt_3d); 
+
+        vector<pair<Vector3d, Vector3d>> in_2d = in_3d; 
+        if(cnt_2d > cnt_3d){
+            vector<pair<Vector3d, Vector3d>> in_2d_tmp = getN(corrs_noise, cnt_2d-cnt_3d); 
+            in_2d.insert(in_2d.end(), in_2d_tmp.begin(), in_2d_tmp.end()); 
+        }
 
         // 3d-2d result 
         me.solvePNP_3D_2D(in_3d, Rij_e, tij_e); 
@@ -168,11 +176,11 @@ bool run_once(double noise, int num, vector<double>& v_dR, vector<double>& v_dt)
         bearingVectors_t bearingVectors1; 
         bearingVectors_t bearingVectors2;
 
-        for(int j=0; j<in_3d.size(); j++){
-            Vector3d pi = in_3d[j].first;
+        for(int j=0; j<in_2d.size(); j++){
+            Vector3d pi = in_2d[j].first;
             pi(0) = pi(0)*pi(2); 
             pi(1) = pi(1)*pi(2);  
-            Vector3d pj = in_3d[j].second; 
+            Vector3d pj = in_2d[j].second; 
             // bearingVectors1.push_back(pi/pi.norm()); 
             points.push_back(pi); 
             bearingVectors1.push_back(pi/pi.norm());

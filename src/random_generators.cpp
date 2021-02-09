@@ -33,8 +33,15 @@
 #include <math.h>
 #include <iostream>
 
-
 using namespace Eigen;
+
+namespace opengv{
+
+  double FX = 460.;
+  double FY = 460.; 
+  double CX = 320.; 
+  double CY = 240.; 
+}
 
 void
 opengv::initializeRandomSeed()
@@ -49,13 +56,13 @@ opengv::generateRandomPoint( double maximumDepth, double minimumDepth )
 {
   Eigen::Vector3d cleanPoint;
 
-  double u = (((double) rand())/ ((double) RAND_MAX))*640.;
-  double v = (((double) rand())/ ((double) RAND_MAX))*480.;
+  double u = (((double) rand())/ ((double) RAND_MAX))*2*CX;
+  double v = (((double) rand())/ ((double) RAND_MAX))*2*CY;
   double d = (((double) rand())/ ((double) RAND_MAX))*(maximumDepth - minimumDepth) + minimumDepth;
 
 
-  cleanPoint[0] = (u - 320.)/460.;  // (((double) rand())/ ((double) RAND_MAX)-0.5)*2.0;
-  cleanPoint[1] = (v - 240.)/460.; // (((double) rand())/ ((double) RAND_MAX)-0.5)*2.0;
+  cleanPoint[0] = (u - CX)/FX;  // (((double) rand())/ ((double) RAND_MAX)-0.5)*2.0;
+  cleanPoint[1] = (v - CY)/FY; // (((double) rand())/ ((double) RAND_MAX)-0.5)*2.0;
   cleanPoint[2] = 1.; //(((double) rand())/ ((double) RAND_MAX)-0.5)*2.0;
   // Eigen::Vector3d direction = cleanPoint / cleanPoint.norm();
   // cleanPoint =
@@ -117,8 +124,10 @@ opengv::addNoise( double noiseLevel, Eigen::Vector3d cleanPoint )
   double noiseY =
       noiseLevel * (((double) rand())/ ((double) RAND_MAX)-0.5)*2.0 / 1.4142;
 
+  // Eigen::Vector3d noisyPoint =
+      // 800 * cleanPoint + noiseX *normalVector1 + noiseY * normalVector2;
   Eigen::Vector3d noisyPoint =
-      800 * cleanPoint + noiseX *normalVector1 + noiseY * normalVector2;
+      FX * cleanPoint + noiseX *normalVector1 + noiseY * normalVector2;
   noisyPoint = noisyPoint / noisyPoint.norm();
   return noisyPoint;
 

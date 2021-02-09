@@ -38,6 +38,8 @@
 namespace opengv
 {
 
+extern double FX, FY, CX, CY; 
+
 void initializeRandomSeed();
 Eigen::Vector3d generateRandomPoint( double maximumDepth, double minimumDepth );
 Eigen::Vector3d generateRandomPointPlane();

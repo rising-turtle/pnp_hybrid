@@ -23,6 +23,9 @@ target_link_libraries(main_opengv_pnp sim_lib opengv_helper)
 add_executable(main_mt_noise main_mt_noise.cpp)
 target_link_libraries(main_mt_noise sim_lib opengv_helper)
 
+add_executable(main_mt_points main_mt_points.cpp)
+target_link_libraries(main_mt_points sim_lib opengv_helper)
+
 # add_executable(test_rotation_only test_rotation_only.cpp)
 # target_link_libraries(test_rotation_only sim_lib )
 
