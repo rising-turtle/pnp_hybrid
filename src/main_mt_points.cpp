@@ -41,7 +41,9 @@ int main(int argc, char* argv[])
 
     vector<int> v_cnt_3d{ 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30};
     // vector<int> v_cnt_3d{ 10, 20, 28};
-    run_monte_carlo(v_cnt_3d, 2.0, 30, 2000);
+    // run_monte_carlo(v_cnt_3d, 2.0, 30, 2000);
+    vector<double> v_dR, v_dt; 
+    run_once(1., 10, 30, v_dR, v_dt); 
     return 0; 
 }
 
@@ -147,9 +149,10 @@ bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& v_dR, vector
 
         vector<pair<Vector3d, Vector3d>> in_3d = getN(corrs_noise, cnt_3d); 
 
-        vector<pair<Vector3d, Vector3d>> in_2d = in_3d; 
+        vector<pair<Vector3d, Vector3d>> in_2d = in_3d;
+        vector<pair<Vector3d, Vector3d>> in_2d_tmp;
         if(cnt_2d > cnt_3d){
-            vector<pair<Vector3d, Vector3d>> in_2d_tmp = getN(corrs_noise, cnt_2d-cnt_3d); 
+            in_2d_tmp = getN(corrs_noise, cnt_2d-cnt_3d); 
             in_2d.insert(in_2d.end(), in_2d_tmp.begin(), in_2d_tmp.end()); 
         }
 
@@ -197,6 +200,21 @@ bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& v_dR, vector
         dR = Rij.transpose()*Rij_e;    
         st.solveTCeres(in_3d, Rij_e, tij_e); 
         dt = tij_e - tij; 
+
+        cout<<"Hybrid PnP dR: "<<computeAngle(dR)<<" dt: "<<dt.norm()<<endl; 
+
+        Matrix3d RR1 = Rij_e; Matrix3d RR2 = Rij_e; 
+        Vector3d tt1 = tij_e; Vector3d tt2 = tij_e; 
+        opt_solver.solveCeres(in_3d, RR1, tt1); 
+        dR = Rij.transpose()*RR1; 
+        dt = tt1 - tij; 
+        cout<<"Opti_1 dR: "<<computeAngle(dR)<<" dt: "<<dt.norm()<<endl; 
+
+        opt_solver.solveCeresHybrid(in_3d, in_2d_tmp, RR2, tt2); 
+        dR = Rij.transpose()*RR2; 
+        dt = tt2 - tij; 
+        cout<<"Opti_2 dR: "<<computeAngle(dR)<<" dt: "<<dt.norm()<<endl; 
+
 
         v_dR.push_back(computeAngle(dR));  
         v_dt.push_back(dt.norm()); 
