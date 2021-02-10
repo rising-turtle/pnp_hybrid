@@ -17,7 +17,7 @@ bool OptSolver::solveCeresHybrid(const vector<pair<Vector3d, Vector3d>> &corres_
 		const vector<pair<Vector3d, Vector3d>> &corres_2d, Matrix3d &Rij, Vector3d &tij)
 {
 	cout<<"before opt: tij: "<<tij.transpose()<<endl; 
-	cout<<"sum err: "<<sum_error(corres_3d, Rij, tij)<<endl; 
+	cout<<"sum 3D err: "<<sum_error(corres_3d, Rij, tij)<<" 2D err: "<<sum_error_2d(corres_2d, Rij, tij)<<endl; 
 
 	Matrix3d Rji = Rij.transpose(); 
 	Eigen::Vector3d tji = -Rji*tij; 
@@ -94,7 +94,7 @@ bool OptSolver::solveCeresHybrid(const vector<pair<Vector3d, Vector3d>> &corres_
 	Rij = qij.toRotationMatrix();
 
 	cout<<"after opt: tij: "<<tij.transpose()<<endl; 
-	cout<<"sum err: "<<sum_error(corres_3d, Rij, tij)<<endl; 
+	cout<<"sum 3D err: "<<sum_error(corres_3d, Rij, tij)<<" 2D err: "<<sum_error_2d(corres_2d, Rij, tij)<<endl; 
 
 	return true; 
 }

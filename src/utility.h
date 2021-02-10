@@ -30,6 +30,7 @@ extern vector<pair<Vector3d, Vector3d>> getInliers(const vector<pair<Vector3d, V
 extern vector<pair<Vector3d, Vector3d>> getInliersIndex(const vector<pair<Vector3d, Vector3d>> &corres, cv::Mat& mask);     
 
 extern double sum_error(const vector<pair<Vector3d, Vector3d>> &corres, const Matrix3d& Rij, const Vector3d& tij); 
+extern double sum_error_2d(const vector<pair<Vector3d, Vector3d>> &corres, const Matrix3d& Rij, const Vector3d& tij);
 
 struct poly{
 	poly(double para[3]){

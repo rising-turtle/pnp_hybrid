@@ -71,11 +71,11 @@ struct SampsonEssential
 		T R[9]; // R is Rji camera_quaternion is Qji 
 		ceres::QuaternionToRotation(camera_quaternion, R); 
 
-		T camera_T[3]; // tij = -Rji*tji
+		T camera_T[3]; // tij = -Rji'*tji
 
-		camera_T[0] = -R[0]*camera_Tji[0] - R[1]*camera_Tji[1] - R[2]*camera_Tji[2]; 
-		camera_T[1] = -R[3]*camera_Tji[0] - R[4]*camera_Tji[1] - R[5]*camera_Tji[2]; 
-		camera_T[2] = -R[6]*camera_Tji[0] - R[7]*camera_Tji[1] - R[8]*camera_Tji[2]; 
+		camera_T[0] = -R[0]*camera_Tji[0] - R[3]*camera_Tji[1] - R[6]*camera_Tji[2]; 
+		camera_T[1] = -R[1]*camera_Tji[0] - R[4]*camera_Tji[1] - R[7]*camera_Tji[2]; 
+		camera_T[2] = -R[2]*camera_Tji[0] - R[5]*camera_Tji[1] - R[8]*camera_Tji[2]; 
 
 
 		T t[9]; // t = [tij]
