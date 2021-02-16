@@ -1,0 +1,32 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% How to use: 
+%   Run the scripts in the OPnP_Toolbox folder directly.
+%   Note that SDP needs the SeDuMi software to solve the relaxation problem,
+%   which is publicaly available at:
+%   http://sedumi.ie.lehigh.edu/
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Fuctionality to reproduce the numerical stability results:
+% Solver_Stability('Fully_Random','Ordinary_3D'): Fig.1(a)
+% Solver_Stability('Near_Cayley_Degenerate','Ordinary_3D'): Fig.1(b)
+% Solver_Stability('Cayley_Degenerate','Ordinary_3D'): Fig.1(c)
+
+% Scripts to reproduce the synthetic experiment results:
+% main_noise_ordinary_3d: 	Corresponding to Fig.2(a)[1,2 columns].
+% main_noise_quasi_singular:	Corresponding to Fig.2(b)[1,2 columns].
+% main_noise_planar:		Corresponding to Fig.2(c)[1,2 columns].
+% main_xpt_ordinary_3d: Corresponding to Fig.2(a)[3,4 columns].
+% main_xpt_planar:	Corresponding to Fig.2(b)[3,4 columns].
+% main_xpt_quasi_singular:Corresponding to Fig.2(c)[3,4 columns].
+% main_time:		Corresponding to Fig.3.
+% main_p3p:         Corresponding to Fig.4.
+
+% Scripts to illustrate the expriments with real images:
+% demo_box: 		Corresponding to Fig.5 [1st row, 1,2 columns]. 
+% demo_bookcover: 	Corresponding to Fig.5 [2nd row, 1,2 columns].
+%
+
+
+
