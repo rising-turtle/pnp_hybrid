@@ -12,7 +12,7 @@ num= 400;
 % compared methods
 A= zeros(size(npts));
 B= zeros(num,1);
-name= {'LHM', 'EPnP+GN', 'RPnP', 'DLS', 'DLS+++',  'SDP'      'OPnP', 'OPnP+LM'};
+name= {'LHM', 'EPnP+GN', 'RPnP', 'DLS', 'DLS+++',  'SDP', 'OPnP', 'OPnP+LM'};
 f= {    @LHM, @EPnP_GN,  @RPnP, @dls_pnp_all, @robust_dls_pnp, @gOp_interface,@OPnP,@PnP_Reproj_NLS_Matlab};
 marker= { 'x', 'o', 'd', '^', '+', '>', 's', 'none'};
 color= {'r','g','b','m','m', 'y','k','c'};
