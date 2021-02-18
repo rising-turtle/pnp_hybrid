@@ -42,8 +42,8 @@ struct ReprojectionError3D
 		p[0] += camera_T[0]; p[1] += camera_T[1]; p[2] += camera_T[2];
 		T xp = p[0] / p[2];
     	T yp = p[1] / p[2];
-    	residuals[0] =100.* (xp - T(observed_u));
-    	residuals[1] =100.* (yp - T(observed_v));
+    	residuals[0] =(xp - T(observed_u));
+    	residuals[1] =(yp - T(observed_v));
     	return true;
 	}
 

@@ -37,12 +37,17 @@ void run_monte_carlo( vector<int> v_cnt_3d, double noise = 1., int cnt_2d = 30, 
 int main(int argc, char* argv[])
 {
     // set up camera intrinsic 
-    CX = 960; CY = 650; 
-    FX = FY = 1460; 
+    // iphone 
+    // CX = 960; CY = 650; 
+    // FX = FY = 1460; 
 
-    vector<int> v_cnt_3d{ 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30};
+    // general case 
+    CX = 640; CY = 480; 
+    FX = FY = 1200; 
+
+    vector<int> v_cnt_3d{ 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30};
     // vector<int> v_cnt_3d{ 10, 20, 28};
-    run_monte_carlo(v_cnt_3d, 2.0, 30, 2000);
+    run_monte_carlo(v_cnt_3d, 1.0, 30, 10000);
     // vector<double> v_dR, v_dt; 
     // run_once(1., 10, 30, v_dR, v_dt); 
     return 0; 
@@ -54,9 +59,10 @@ void run_monte_carlo( vector<int> v_cnt_3d, double noise, int cnt_2d,  int TIMES
     // ofstream ouf_epnp("PT_EPNP_NOISE_20.log"); 
     // ofstream ouf_hybrid("PT_HYBRID_NOISE_20.log"); 
 
-    ofstream ouf("PT_NOISE_20.log"); 
-    ouf <<"number of 3D poitns: [mean_t] [std_t] [mean_r] [std_r]"<<endl; 
-    vector<string> methods{"EPNP", "HYBRID", "HYBRID-GN"}; // , "UPNP"
+    // ofstream ouf("PT_NOISE_20.log"); 
+    ofstream ouf("PT_NOISE_10.log"); 
+    ouf <<"number of 3D points: [mean_t] [std_t] [mean_r] [std_r]"<<endl; 
+    vector<string> methods{"EPNP", "HYBRID", "UPNP"}; // , "HYBRID-GN" "UPNP"
 
     // ofstream ouf_epnp("tmp_epnp.log"); 
     // ofstream ouf_hybrid("tmp_hybrid.log"); 
@@ -74,7 +80,7 @@ void run_monte_carlo( vector<int> v_cnt_3d, double noise, int cnt_2d,  int TIMES
 
         for(int k=0; k < TIMES; ){
             vector<double> v_dr, v_dt; 
-            if(run_once(noise, v_cnt_3d[i], cnt_2d, v_dr, v_dt, true)){
+            if(run_once(noise, v_cnt_3d[i], cnt_2d, v_dr, v_dt, false)){
                 k++; 
                 for(int n=0; n<N; n++){
                     vv_er[n].push_back(v_dr[n]);
@@ -108,8 +114,9 @@ void run_monte_carlo( vector<int> v_cnt_3d, double noise, int cnt_2d,  int TIMES
 
         ouf<<v_cnt_3d[i]<<" ";
         for(int n=0; n<N; n++){
-            cout<<"cnt_3d: "<<v_cnt_3d[i]<<" "<<methods[n]<<" mean_te: "<<v_mean_t[n]<<" mean_re: "<<v_mean_r[n]<<endl; 
+            cout<<"cnt_3d: "<<v_cnt_3d[i]<<" "<<methods[n]<<" te: "<<v_mean_t[n]<<" +- "<<v_std_t[n]<<" re: "<<v_mean_r[n]<<" +- "<<v_std_r[n]<<endl; 
             ouf<<v_mean_t[n]<<" "<<v_std_t[n]<<" "<<v_mean_r[n]<<" "<<v_std_r[n]<<" ";
+            // ouf<<v_mean_r[n]<<" ";
         }
         ouf<<endl;
 
@@ -194,7 +201,7 @@ bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& v_dR, vector
 
         // 3d-2d result 
         me.solvePNP_3D_2D(in_3d, Rij_e, tij_e); 
-        print_err("opencv epnp: ", Rij_e, tij_e, Rij, tij); 
+        // print_err("opencv epnp: ", Rij_e, tij_e, Rij, tij); 
         
         Matrix3d dR = Rij.transpose()*Rij_e;
         if(computeAngle(dR) > 1.){
@@ -208,7 +215,7 @@ bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& v_dR, vector
         }
 
         v_dR.push_back(computeAngle(dR));  
-        v_dt.push_back(dt.norm()); 
+        v_dt.push_back(dt.norm()/tij.norm()*100.); 
 
         //derive correspondences based on random point-cloud
         bearingVectors_t points;
@@ -237,9 +244,9 @@ bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& v_dR, vector
         st.solveTCeres(in_3d, Rij_e, tij_e); 
         dt = tij_e - tij; 
 
-        cout<<"Hybrid PnP dR: "<<computeAngle(dR)<<" dt: "<<dt.norm()<<endl; 
+        // cout<<"Hybrid PnP dR: "<<computeAngle(dR)<<" dt: "<<dt.norm()<<endl; 
         v_dR.push_back(computeAngle(dR));  
-        v_dt.push_back(dt.norm()); 
+        v_dt.push_back(dt.norm()/tij.norm()*100.); 
 
         Matrix3d RR1 = Rij_e; Matrix3d RR2 = Rij_e; 
         Vector3d tt1 = tij_e; Vector3d tt2 = tij_e; 
@@ -251,32 +258,50 @@ bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& v_dR, vector
             opt_solver.solveCeresHybrid(in_3d, in_2d_tmp, RR2, tt2); 
             dR = Rij.transpose()*RR2; 
             dt = tt2 - tij; 
-            cout<<"Opti_2 dR: "<<computeAngle(dR)<<" dt: "<<dt.norm()<<endl;
+            // cout<<"Opti_2 dR: "<<computeAngle(dR)<<" dt: "<<dt.norm()<<endl;
             v_dR.push_back(computeAngle(dR));  
-            v_dt.push_back(dt.norm());  
+            v_dt.push_back(dt.norm()/tij.norm()*100.); 
         }
 
-        // // try UPNP
-        // rotation_t tmp = Matrix3d::Identity(); 
+        // try UPNP
+        rotation_t tmp = Matrix3d::Identity(); 
 
-        // //create a central absolute adapter
-        // absolute_pose::CentralAbsoluteAdapter adapter_abs(
-        //   bearingVectors2,
-        //   points,
-        //   tmp );
+        //create a central absolute adapter
+        absolute_pose::CentralAbsoluteAdapter adapter_abs(
+          bearingVectors2,
+          points,
+          tmp );
 
-        // transformations_t upnp_transformations = absolute_pose::upnp(adapter_abs);
-        // transformation_t upnp_transformation = upnp_transformations[0]; 
-        // // for(int k=0; k < upnp_transformations.size(); k++)
-        //     // print_err("upnp : ", upnp_transformations[k], Rij, tij);
-        // // cout <<"opengv upnp: "<<endl<<upnp_transformation.block<3,3>(0,0)<<endl; 
-        // Matrix3d R_upnp = upnp_transformation.block<3,3>(0, 0);
-        // Vector3d t_upnp = upnp_transformation.block<3,1>(0, 3);
-        // dt = tij - t_upnp; 
-        // dR = Rij.transpose()*R_upnp;
+        transformations_t upnp_transformations = absolute_pose::upnp(adapter_abs);
+        transformation_t upnp_transformation = upnp_transformations[0]; 
 
-        // v_dR.push_back(computeAngle(dR));  
-        // v_dt.push_back(dt.norm()); 
+        // find transformation  with smallest error
+        Matrix3d R_upnp = upnp_transformation.block<3,3>(0, 0);
+        Vector3d t_upnp = upnp_transformation.block<3,1>(0, 3);
+        dt = tij - t_upnp; 
+        dR = Rij.transpose()*R_upnp;
+
+        for(int j=1; j<upnp_transformations.size(); j++){
+            transformation_t tmpT = upnp_transformations[j];
+            Vector3d tmp_t = tmpT.block<3,1>(0, 3);
+            Matrix3d tmp_R = tmpT.block<3,3>(0, 0);
+            Vector3d tmp_dt = tij - tmp_t; 
+            Matrix3d tmp_dR = Rij.transpose()*tmp_R; 
+            if(tmp_dt.norm() < dt.norm() && computeAngle(tmp_dR) < computeAngle(dR)){
+               // cout<<"what? the first solution is not the best.!"<<endl; 
+                dt = tmp_dt; 
+                dR = tmp_dR; // Rij.transpose()*tmp_R; 
+            }
+
+        }
+
+        // for(int k=0; k < upnp_transformations.size(); k++)
+            // print_err("upnp : ", upnp_transformations[k], Rij, tij);
+        // cout <<"opengv upnp: "<<endl<<upnp_transformation.block<3,3>(0,0)<<endl; 
+        // print_err("opengv upnp: ", upnp_transformation, Rij, tij); 
+
+        v_dR.push_back(computeAngle(dR));  
+        v_dt.push_back(dt.norm()/tij.norm()*100.); 
 
     }
     return true; 
