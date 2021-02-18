@@ -7,9 +7,9 @@ addpath helpers;
 addpath SeDuMi_1_3;
 
 % experimental parameters
-nl= 2;
-npts= 4:2:10; %4:1:15;
-num= 4; % 400
+% nl= 1; %2;
+npts= 4:2:30; %4:1:15;
+num= 5000; % 400
 
 % compared methods
 A= zeros(size(npts));
@@ -25,14 +25,15 @@ method_list= struct('name', name, 'f', f, 'mean_r', A, 'mean_t', A,...
     'med_r', A, 'med_t', A, 'std_r', A, 'std_t', A, 'r', B, 't', B,...
     'marker', marker, 'color', color, 'markerfacecolor', markerfacecolor, 'linestyle', linestyle);
 
-focal_length = 1460; 
-CX = 960; 
-CY = 650;
+focal_length = 1200; %1460; 
+CX = 640; % 960; 
+CY = 480; %650;
 
 % initialize cam structure 
 cam.CX = CX; 
 cam.CY = CY; 
 cam.F = focal_length; 
+noise = 1.;
 
 % experiments
 for i= 1:length(npts)
@@ -68,7 +69,7 @@ for i= 1:length(npts)
         
         %% get 
         outlier_fraction = 0.; 
-        noise = 0.;
+      
         [XXw, xxn, twc, Rwc] = create3D2DExperiment(npt, noise, cam, 0.);
         R = inv(Rwc); % R is Rcw  
         t = -R*twc; 
@@ -135,6 +136,8 @@ close all;
 yrange= [0 2];
 
 i= 0; w= 300; h= 300;
+
+save_results(npts, method_list); 
 
 figure('color','w','position',[w*i,100,w,h]);i=i+1;
 xdrawgraph(npts,yrange,method_list,'mean_r','Mean Rotation Error',...

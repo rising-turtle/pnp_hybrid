@@ -19,7 +19,7 @@ rotation2 = generateBoundedR(max_rotation);
 
 %% Generate random point-cloud
 
-minDepth = 2.0;
+minDepth = 4.0;
 maxDepth = 8.0;
 
 % normalizedPoints = 2.0*(rand(3,pt_number)-repmat(0.5,3,pt_number));
@@ -48,9 +48,10 @@ while i<= pt_number
     end
     
     d_std = poly_curve(body_point1(3));
+    %  d_std = poly_derive(body_point1(3), cam.F, noise);
     % d = body_point1(3) + 2.0*(rand(1) - 0.5)*d_std; 
     
-    d_std = 0;
+    % d_std = 0;
     noise_d = d_std * randn(1);
     d = noise_d + body_point1(3); 
     d1(i) = d; 
@@ -132,6 +133,11 @@ function pt = generateRandomPoint(cam, min_d, max_d)
     pt(1) = d*(u-cam.CX)/cam.F; 
     pt(2) = d*(v-cam.CY)/cam.F; 
     pt(3) = d; 
+end
+
+function d_std = poly_derive(d, F, noise)
+    rig_len = 0.1; 
+    d_std = (d^2)*noise/(F*rig_len); 
 end
 
 function d_std = poly_curve(d)
