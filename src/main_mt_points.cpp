@@ -27,6 +27,7 @@ using namespace Eigen;
 using namespace std; 
 using namespace opengv; 
 
+void print_err(string pre, Matrix<double, 3, 4>& Transformation, Matrix3d& Rg, Vector3d& tg);
 void print_err(string pre, Matrix3d& Re, Vector3d& te, Matrix3d& Rg, Vector3d& tg); 
 
 bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& dR, vector<double>& dt, bool use_optimization=false); 
@@ -50,41 +51,74 @@ int main(int argc, char* argv[])
 
 void run_monte_carlo( vector<int> v_cnt_3d, double noise, int cnt_2d,  int TIMES)
 {
-    ofstream ouf_epnp("PT_EPNP_NOISE_20.log"); 
-    ofstream ouf_hybrid("PT_HYBRID_NOISE_20.log"); 
+    // ofstream ouf_epnp("PT_EPNP_NOISE_20.log"); 
+    // ofstream ouf_hybrid("PT_HYBRID_NOISE_20.log"); 
+
+    ofstream ouf("PT_NOISE_20.log"); 
+    ouf <<"number of 3D poitns: [mean_t] [std_t] [mean_r] [std_r]"<<endl; 
+    vector<string> methods{"EPNP", "HYBRID", "HYBRID-GN"}; // , "UPNP"
 
     // ofstream ouf_epnp("tmp_epnp.log"); 
     // ofstream ouf_hybrid("tmp_hybrid.log"); 
 
+    int N = methods.size(); 
+    for(int n = 0; n<N ; n++)
+        ouf << methods[n]<<" ";
+    ouf<<std::fixed<<endl; 
+
     for(int i=0; i<v_cnt_3d.size(); i++){
 
-        vector<double> hybrid_et, hybrid_er, epnp_et, epnp_er; 
+        // vector<double> hybrid_et, hybrid_er, epnp_et, epnp_er; 
+        vector<vector<double> > vv_er(N);
+        vector<vector<double> > vv_et(N);
 
         for(int k=0; k < TIMES; ){
             vector<double> v_dr, v_dt; 
-            if(run_once(noise, v_cnt_3d[i], cnt_2d, v_dr, v_dt)){
+            if(run_once(noise, v_cnt_3d[i], cnt_2d, v_dr, v_dt, true)){
                 k++; 
-                epnp_er.push_back(v_dr[0]); 
-                epnp_et.push_back(v_dt[0]);
-                hybrid_er.push_back(v_dr[1]);
-                hybrid_et.push_back(v_dt[1]); 
+                for(int n=0; n<N; n++){
+                    vv_er[n].push_back(v_dr[n]);
+                    vv_et[n].push_back(v_dt[n]); 
+                }
+                // epnp_er.push_back(v_dr[0]); 
+                // epnp_et.push_back(v_dt[0]);
+                // hybrid_er.push_back(v_dr[1]);
+                // hybrid_et.push_back(v_dt[1]); 
             }
-
         }
+
+        vector<double> v_mean_r(N); 
+        vector<double> v_std_r(N); 
+        vector<double> v_mean_t(N); 
+        vector<double> v_std_t(N);
+        for(int n=0; n<N; n++){
+            pair<double, double> trans = getMeanStd(vv_et[n]); 
+            v_mean_t[n] = trans.first; 
+            v_std_t[n] = trans.second; 
+            pair<double, double> rot = getMeanStd(vv_er[n]);
+            v_mean_r[n] = rot.first; 
+            v_std_r[n] = rot.second;  
+        } 
           // compute mean and std 
-        pair<double, double> h_trans = getMeanStd(hybrid_et); 
-        pair<double, double> h_rot = getMeanStd(hybrid_er); 
-        pair<double, double> t_trans = getMeanStd(epnp_et); 
-        pair<double, double> t_rot = getMeanStd(epnp_er); 
+        // pair<double, double> h_trans = getMeanStd(hybrid_et); 
+        // pair<double, double> h_rot = getMeanStd(hybrid_er); 
+        // pair<double, double> t_trans = getMeanStd(epnp_et); 
+        // pair<double, double> t_rot = getMeanStd(epnp_er); 
 
-        cout<<"cnt_3d: "<<v_cnt_3d[i]<<" epnp mean_re: "<<t_rot.first<<" hybrid mean_re: "<<h_rot.first<<endl
-            << "epnp mean_te: "<<t_trans.first<<" hybrid mean_te: "<<h_trans.first<<endl; 
 
-        ouf_epnp<<v_cnt_3d[i]<<" \t "<<t_trans.first<<" \t "<<t_trans.second<<" \t "<<t_rot.first<<" \t "<<t_rot.second<<endl; 
-        ouf_hybrid<<v_cnt_3d[i]<<" \t "<<h_trans.first<<" \t "<<h_trans.second<<" \t "<<h_rot.first<<" \t "<<h_rot.second<<endl; 
+        ouf<<v_cnt_3d[i]<<" ";
+        for(int n=0; n<N; n++){
+            cout<<"cnt_3d: "<<v_cnt_3d[i]<<" "<<methods[n]<<" mean_te: "<<v_mean_t[n]<<" mean_re: "<<v_mean_r[n]<<endl; 
+            ouf<<v_mean_t[n]<<" "<<v_std_t[n]<<" "<<v_mean_r[n]<<" "<<v_std_r[n]<<" ";
+        }
+        ouf<<endl;
+
+        // ouf_epnp<<v_cnt_3d[i]<<" \t "<<t_trans.first<<" \t "<<t_trans.second<<" \t "<<t_rot.first<<" \t "<<t_rot.second<<endl; 
+        // ouf_hybrid<<v_cnt_3d[i]<<" \t "<<h_trans.first<<" \t "<<h_trans.second<<" \t "<<h_rot.first<<" \t "<<h_rot.second<<endl; 
     }
-    ouf_epnp.close(); 
-    ouf_hybrid.close(); 
+    // ouf_epnp.close(); 
+    // ouf_hybrid.close(); 
+    ouf.close(); 
 }
 
 
@@ -160,7 +194,7 @@ bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& v_dR, vector
 
         // 3d-2d result 
         me.solvePNP_3D_2D(in_3d, Rij_e, tij_e); 
-        // print_err("opencv epnp: ", Rij_e, tij_e, Rij, tij); 
+        print_err("opencv epnp: ", Rij_e, tij_e, Rij, tij); 
         
         Matrix3d dR = Rij.transpose()*Rij_e;
         if(computeAngle(dR) > 1.){
@@ -204,6 +238,8 @@ bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& v_dR, vector
         dt = tij_e - tij; 
 
         cout<<"Hybrid PnP dR: "<<computeAngle(dR)<<" dt: "<<dt.norm()<<endl; 
+        v_dR.push_back(computeAngle(dR));  
+        v_dt.push_back(dt.norm()); 
 
         Matrix3d RR1 = Rij_e; Matrix3d RR2 = Rij_e; 
         Vector3d tt1 = tij_e; Vector3d tt2 = tij_e; 
@@ -215,11 +251,32 @@ bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& v_dR, vector
             opt_solver.solveCeresHybrid(in_3d, in_2d_tmp, RR2, tt2); 
             dR = Rij.transpose()*RR2; 
             dt = tt2 - tij; 
-            cout<<"Opti_2 dR: "<<computeAngle(dR)<<" dt: "<<dt.norm()<<endl; 
+            cout<<"Opti_2 dR: "<<computeAngle(dR)<<" dt: "<<dt.norm()<<endl;
+            v_dR.push_back(computeAngle(dR));  
+            v_dt.push_back(dt.norm());  
         }
 
-        v_dR.push_back(computeAngle(dR));  
-        v_dt.push_back(dt.norm()); 
+        // // try UPNP
+        // rotation_t tmp = Matrix3d::Identity(); 
+
+        // //create a central absolute adapter
+        // absolute_pose::CentralAbsoluteAdapter adapter_abs(
+        //   bearingVectors2,
+        //   points,
+        //   tmp );
+
+        // transformations_t upnp_transformations = absolute_pose::upnp(adapter_abs);
+        // transformation_t upnp_transformation = upnp_transformations[0]; 
+        // // for(int k=0; k < upnp_transformations.size(); k++)
+        //     // print_err("upnp : ", upnp_transformations[k], Rij, tij);
+        // // cout <<"opengv upnp: "<<endl<<upnp_transformation.block<3,3>(0,0)<<endl; 
+        // Matrix3d R_upnp = upnp_transformation.block<3,3>(0, 0);
+        // Vector3d t_upnp = upnp_transformation.block<3,1>(0, 3);
+        // dt = tij - t_upnp; 
+        // dR = Rij.transpose()*R_upnp;
+
+        // v_dR.push_back(computeAngle(dR));  
+        // v_dt.push_back(dt.norm()); 
 
     }
     return true; 
@@ -231,4 +288,15 @@ void print_err(string pre, Matrix3d& Re, Vector3d& te, Matrix3d& Rg, Vector3d& t
 	Matrix3d dR = Rg.transpose()*Re;
 
 	cout<<pre<<" trans err: "<<dt.norm()<<" rotation err: "<<computeAngle(dR)<<endl; 
+}
+
+void print_err(string pre, Matrix<double, 3, 4>& Transformation, Matrix3d& Rg, Vector3d& tg)
+{
+
+    Matrix3d Re = Transformation.block<3,3>(0, 0);
+    Vector3d te = Transformation.block<3,1>(0, 3);
+    Vector3d dt = tg - te; 
+    Matrix3d dR = Rg.transpose()*Re;
+
+    cout<<pre<<" trans err: "<<dt.norm()<<" ros err: "<<computeAngle(dR)<<endl; 
 }
