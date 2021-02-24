@@ -45,10 +45,10 @@ int main(int argc, char* argv[])
     CX = 640; CY = 480; 
     FX = FY = 1200; 
 
-    // vector<int> v_cnt_3d{ 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30};
+    vector<int> v_cnt_3d{ 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30};
     // vector<int> v_cnt_3d{ 4, 6};
     // vector<int> v_cnt_3d{ 4, 10, 20};
-    vector<int> v_cnt_3d{ 6, 10, 16};
+    // vector<int> v_cnt_3d{ 6, 10, 16};
     run_monte_carlo(v_cnt_3d, 1.0, 30, 5000);
     // vector<double> v_dR, v_dt; 
     // run_once(1., 10, 30, v_dR, v_dt); 
@@ -61,7 +61,7 @@ void run_monte_carlo( vector<int> v_cnt_3d, double noise, int cnt_2d,  int TIMES
     // ofstream ouf_epnp("PT_EPNP_NOISE_20.log"); 
     // ofstream ouf_hybrid("PT_HYBRID_NOISE_20.log"); 
 
-    ofstream ouf("PT_NOISE_10_6_10_16.log"); 
+    ofstream ouf("PT_NOISE_10.log"); 
     ouf <<"number of 3D points: [mean_t] [std_t] [mean_r] [std_r]"<<endl; 
     vector<string> methods{"EPNP", "HYBRID", "UPNP"}; // , "HYBRID-GN" "UPNP"
 
