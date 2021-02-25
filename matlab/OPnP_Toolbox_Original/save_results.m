@@ -3,7 +3,7 @@
 
 function save_results(xs, method_list)
     
-    fmean = fopen('test_results/PT_NOISE_10_MAT.txt', 'w'); 
+    fmean = fopen('test_results/PT_NOISE_10_MAT2.txt', 'w'); 
     % fmed = fopen('test_results/median.txt', 'w');
     fprintf(fmean, 'number of points [mean_t, std_t, mean_r, std_r] \n');
     for i= 1:length(method_list)

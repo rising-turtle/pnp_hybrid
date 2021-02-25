@@ -24,8 +24,8 @@ function v_noisy = addNoise(v_clean,focal_length,pixel_noise)
     inPlaneVector1 = inPlaneVector1 / norm(inPlaneVector1);
     inPlaneVector2 = cross(v_clean,inPlaneVector1);
     
-    noiseX = pixel_noise * (rand-0.5)*2.0;% / sqrt(2);
-    noiseY = pixel_noise * (rand-0.5)*2.0;% / sqrt(2);
+    noiseX = pixel_noise * (rand-0.5)*2.0/sqrt(2);
+    noiseY = pixel_noise * (rand-0.5)*2.0/sqrt(2);
     
     v_noisy = focal_length * v_clean + noiseX * inPlaneVector1 + noiseY * inPlaneVector2;
     

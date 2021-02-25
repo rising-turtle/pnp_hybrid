@@ -3,15 +3,20 @@ function [y  y1]= cal_pose_err(T1, T2)
 R1= T1(1:3,1:3);
 R2= T2(1:3,1:3);
 
-X1= R1(:,1); X2= R2(:,1);
-Y1= R1(:,2); Y2= R2(:,2);
-Z1= R1(:,3); Z2= R2(:,3);
+% X1= R1(:,1); X2= R2(:,1);
+% Y1= R1(:,2); Y2= R2(:,2);
+% Z1= R1(:,3); Z2= R2(:,3);
 
-exyz= [X1'*X2 Y1'*Y2 Z1'*Z2];
-exyz(exyz>1)= 1;
-exyz(exyz<-1)= -1;
+% 
+% exyz= [X1'*X2 Y1'*Y2 Z1'*Z2];
+% exyz(exyz>1)= 1;
+% exyz(exyz<-1)= -1;
+% 
+% y(1)= max(abs(acos(exyz)))*180/pi;
 
-y(1)= max(abs(acos(exyz)))*180/pi;
+% new way of computing difference between R1, and R2
+dR = R1'*R2; 
+y(1) = computeAngle(dR)*180./3.141592654;
 
 q1 = Matrix2Quaternion(R1);
 q2 = Matrix2Quaternion(R2);
@@ -26,6 +31,17 @@ y(2)= norm(T1(1:3,4)-T2(1:3,4))/norm(T2(1:3,4))*100;
 y1(2) = y(2);
 y= abs(y);
 
+end
+
+function dR = computeAngle(R)
+    dtrace = (R(1,1)+R(2,2)+R(3,3)-1.)/2.;
+    if dtrace < -1.
+        dtrace = -1;
+    end
+    if dtrace > 1.
+        dtrace = 1;
+    end
+    dR = acos(dtrace); 
 end
 
 function Q = Matrix2Quaternion(R)

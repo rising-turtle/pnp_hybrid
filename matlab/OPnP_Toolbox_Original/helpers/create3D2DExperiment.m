@@ -19,7 +19,7 @@ rotation2 = generateBoundedR(max_rotation);
 
 %% Generate random point-cloud
 
-minDepth = 4.0;
+minDepth = 2.0; %4.0;
 maxDepth = 8.0;
 
 % normalizedPoints = 2.0*(rand(3,pt_number)-repmat(0.5,3,pt_number));
