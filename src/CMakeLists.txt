@@ -35,3 +35,6 @@ target_link_libraries(test_iphone_data sim_lib)
 
 add_executable(main_mt_points_iphone main_mt_points_iphone.cpp)
 target_link_libraries(main_mt_points_iphone sim_lib)
+
+add_executable(main_feature_track main_feature_track.cpp )
+target_link_libraries(main_feature_track sim_lib)
