@@ -28,6 +28,9 @@ if isnan(y(1))
 end
 
 y(2)= norm(T1(1:3,4)-T2(1:3,4))/norm(T2(1:3,4))*100;
+if y(2) == inf
+    y(2) = 0;
+end
 y1(2) = y(2);
 y= abs(y);
 
