@@ -14,8 +14,11 @@ addpath SeDuMi_1_3;
 
 %% experimental parameters
 % nl= 1; %2;
-npts= 4:2:30; %4:1:15;
-num= 10; %
+% npts= 4:2:30; %4:1:15;
+
+npts = [7, 10, 15, 20, 30]; %10:10:30;
+
+num= 100; %
 
 % compared methods
 A= zeros(size(npts));
@@ -39,6 +42,7 @@ gt = [0, 3.13, 6.19, 9.25, 12.32, 15.32, 18.44]; % ground truth for rot_pitch, r
 %% 
 index = 6; 
 r_angle = (gt(index+1) - gt(1))*pi/180.; 
+
 
 t = [0, 0, 0]'; 
 cs = cos(r_angle); 
@@ -66,11 +70,11 @@ for i= 1:length(npts)
         
         %% get 
         filename = join([folder,'/', move_name,'_', string(j)], "");
-        [XXw, xxn] = get_data(filename); 
+        [XXw, xxn] = get_data(filename);
         xxn = xxn(:,(2*(index-1)+1):(2*index)); 
-        
         %% get the number of points 
         [XXw, xxn] = get_N(XXw, xxn, npt); 
+        
         XXw = XXw'; 
         xxn = xxn';
         
