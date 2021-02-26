@@ -38,3 +38,6 @@ target_link_libraries(main_mt_points_iphone sim_lib)
 
 add_executable(main_feature_track main_feature_track.cpp )
 target_link_libraries(main_feature_track sim_lib)
+
+add_executable(main_pnp_input_features main_pnp_input_features.cpp)
+target_link_libraries(main_pnp_input_features sim_lib)
