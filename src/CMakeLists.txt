@@ -29,6 +29,9 @@ target_link_libraries(main_mt_points sim_lib opengv_helper)
 # add_executable(test_rotation_only test_rotation_only.cpp)
 # target_link_libraries(test_rotation_only sim_lib )
 
+add_executable(test_mt_rotation test_mt_rotation.cpp)
+target_link_libraries(test_mt_rotation sim_lib opengv_helper)
+
 ############## test iphone12's data #################
 add_executable(test_iphone_data test_iphone_data.cpp)
 target_link_libraries(test_iphone_data sim_lib)

@@ -1,7 +1,7 @@
 /*
-    Feb. 9th, 2021, He Zhang, fuyinzh@gmail.com 
+    Mar. 6th, 2021, He Zhang, fuyinzh@gmail.com 
 
-    monte carlo against different number of points   
+    monte carlo against different number of points for rotation 
 
 */
 
@@ -30,9 +30,9 @@ using namespace opengv;
 void print_err(string pre, Matrix<double, 3, 4>& Transformation, Matrix3d& Rg, Vector3d& tg);
 void print_err(string pre, Matrix3d& Re, Vector3d& te, Matrix3d& Rg, Vector3d& tg); 
 
-bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& dR, vector<double>& dt); 
+bool run_once(double noise, int cnt_3d, vector<double>& dR); 
 
-void run_monte_carlo( vector<int> v_cnt_3d, double noise = 1., int cnt_2d = 30,  int TIMES= 1000) ;
+void run_monte_carlo( vector<int> v_cnt_3d, double noise = 1., int TIMES= 1000) ;
 
 int main(int argc, char* argv[])
 {
@@ -43,26 +43,25 @@ int main(int argc, char* argv[])
 
     // general case 
     CX = 640; CY = 480; 
-    FX = FY = 800; // 1200; 
+    FX = FY = 800; // 525; //1200; 
 
-    vector<int> v_cnt_3d{ 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30};
-    // vector<int> v_cnt_3d{ 4, 6};
-    // vector<int> v_cnt_3d{ 4, 10, 20};
-    // vector<int> v_cnt_3d{ 6, 10, 16};
-    run_monte_carlo(v_cnt_3d, 1.0, 30, 5000);
+    // vector<int> v_cnt_3d{ 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30};
+    // vector<int> v_cnt_3d{ 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30};
+    vector<int> v_cnt_3d{ 6, 10, 20, 30, 40, 50, 60, 70, 80, 100};
+    run_monte_carlo(v_cnt_3d, 1.0, 500);
     // vector<double> v_dR, v_dt; 
     // run_once(1., 10, 30, v_dR, v_dt); 
     return 0; 
 }
 
 
-void run_monte_carlo( vector<int> v_cnt_3d, double noise, int cnt_2d,  int TIMES)
+void run_monte_carlo( vector<int> v_cnt_3d, double noise, int TIMES)
 {
     // ofstream ouf_epnp("PT_EPNP_NOISE_20.log"); 
     // ofstream ouf_hybrid("PT_HYBRID_NOISE_20.log"); 
 
-    ofstream ouf("PT_NOISE_10.log"); 
-    ouf <<"number of 3D points: [mean_t] [std_t] [mean_r] [std_r]"<<endl; 
+    ofstream ouf("PT_ROTAION_NOISE_10.log"); 
+    ouf <<"number of points: [mean_r] [std_r]"<<endl; 
     vector<string> methods{"EPNP", "HYBRID", "UPNP"}; // , "HYBRID-GN" "UPNP"
 
     // ofstream ouf_epnp("tmp_epnp.log"); 
@@ -77,15 +76,15 @@ void run_monte_carlo( vector<int> v_cnt_3d, double noise, int cnt_2d,  int TIMES
 
         // vector<double> hybrid_et, hybrid_er, epnp_et, epnp_er; 
         vector<vector<double> > vv_er(N);
-        vector<vector<double> > vv_et(N);
+        // vector<vector<double> > vv_et(N);
 
         for(int k=0; k < TIMES; ){
             vector<double> v_dr, v_dt; 
-            if(run_once(noise, v_cnt_3d[i], cnt_2d, v_dr, v_dt)){
+            if(run_once(noise, v_cnt_3d[i], v_dr)){
                 k++; 
                 for(int n=0; n<N; n++){
                     vv_er[n].push_back(v_dr[n]);
-                    vv_et[n].push_back(v_dt[n]); 
+                    // vv_et[n].push_back(v_dt[n]); 
                 }
                 // epnp_er.push_back(v_dr[0]); 
                 // epnp_et.push_back(v_dt[0]);
@@ -96,12 +95,12 @@ void run_monte_carlo( vector<int> v_cnt_3d, double noise, int cnt_2d,  int TIMES
 
         vector<double> v_mean_r(N); 
         vector<double> v_std_r(N); 
-        vector<double> v_mean_t(N); 
-        vector<double> v_std_t(N);
+        // vector<double> v_mean_t(N); 
+        // vector<double> v_std_t(N);
         for(int n=0; n<N; n++){
-            pair<double, double> trans = getMeanStd(vv_et[n]); 
-            v_mean_t[n] = trans.first; 
-            v_std_t[n] = trans.second; 
+            // pair<double, double> trans = getMeanStd(vv_et[n]); 
+            // v_mean_t[n] = trans.first; 
+            // v_std_t[n] = trans.second; 
             pair<double, double> rot = getMeanStd(vv_er[n]);
             v_mean_r[n] = rot.first; 
             v_std_r[n] = rot.second;  
@@ -115,8 +114,8 @@ void run_monte_carlo( vector<int> v_cnt_3d, double noise, int cnt_2d,  int TIMES
 
         ouf<<v_cnt_3d[i]<<" ";
         for(int n=0; n<N; n++){
-            cout<<"cnt_3d: "<<v_cnt_3d[i]<<" "<<methods[n]<<" te: "<<v_mean_t[n]<<" +- "<<v_std_t[n]<<" re: "<<v_mean_r[n]<<" +- "<<v_std_r[n]<<endl; 
-            ouf<<v_mean_t[n]<<" "<<v_std_t[n]<<" "<<v_mean_r[n]<<" "<<v_std_r[n]<<" ";
+            cout<<"cnt_3d: "<<v_cnt_3d[i]<<" "<<methods[n]<<" re: "<<v_mean_r[n]<<" +- "<<v_std_r[n]<<endl; 
+            ouf<<v_mean_r[n]<<" "<<v_std_r[n]<<" ";
             // ouf<<v_mean_r[n]<<" ";
         }
         ouf<<endl;
@@ -130,7 +129,7 @@ void run_monte_carlo( vector<int> v_cnt_3d, double noise, int cnt_2d,  int TIMES
 }
 
 
-bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& v_dR, vector<double>& v_dt)
+bool run_once(double noise, int cnt_3d, vector<double>& v_dR)
 {
     SimCorr sim; 
 
@@ -190,8 +189,7 @@ bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& v_dR, vector
         // cout<<"times: "<<i<<endl; 
         vector<pair<Vector3d, Vector3d>> corrs_noise = sim.addNoise3D2D(corrs, noise/FX); 
 
-        vector<pair<Vector3d, Vector3d>> in_2d = getN(corrs_noise, cnt_2d); 
-        vector<pair<Vector3d, Vector3d>> in_3d( in_2d.begin(), in_2d.begin()+cnt_3d); 
+        vector<pair<Vector3d, Vector3d>> in_3d = getN(corrs_noise, cnt_3d); 
 
         // 3d-2d result 
         me.solvePNP_3D_2D(in_3d, Rij_e, tij_e); 
@@ -209,21 +207,21 @@ bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& v_dR, vector
         }
 
         v_dR.push_back(R2D(computeAngle(dR)));  
-        v_dt.push_back(dt.norm()/tij.norm()*100.); 
+        // v_dt.push_back(dt.norm()/tij.norm()*100.); 
 
         // 3d-2d result 
-        me.solvePNP_2D_2D(in_2d, Rij_e, tij_e); 
+        // me.solvePNP_2D_2D(in_3d, Rij_e, tij_e); 
 
         //derive correspondences based on random point-cloud
         bearingVectors_t points;
         bearingVectors_t bearingVectors1; 
         bearingVectors_t bearingVectors2;
 
-        for(int j=0; j<in_2d.size(); j++){
-            Vector3d pi = in_2d[j].first;
+        for(int j=0; j<in_3d.size(); j++){
+            Vector3d pi = in_3d[j].first;
             pi(0) = pi(0)*pi(2); 
             pi(1) = pi(1)*pi(2);  
-            Vector3d pj = in_2d[j].second; 
+            Vector3d pj = in_3d[j].second; 
             // bearingVectors1.push_back(pi/pi.norm()); 
             points.push_back(pi); 
             bearingVectors1.push_back(pi/pi.norm());
@@ -238,15 +236,15 @@ bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& v_dR, vector
         // first use eight pts to compute initial rotation 
         Rij_e =  relative_pose::eigensolver(adapter_rbs);       
         dR = Rij.transpose()*Rij_e;    
-        st.solveTCeres(in_3d, Rij_e, tij_e); 
-        dt = tij_e - tij; 
+        // st.solveTCeres(in_3d, Rij_e, tij_e); 
+        // dt = tij_e - tij; 
 
-        cout<<"Hybrid PnP dt: "<<dt.norm()<<" dR: "<<computeAngle(dR)<<endl; 
+        cout<<"Hybrid PnP dR: "<<computeAngle(dR)<<endl; 
         v_dR.push_back(R2D(computeAngle(dR)));  
-        v_dt.push_back(dt.norm()/tij.norm()*100.); 
+        // v_dt.push_back(dt.norm()/tij.norm()*100.); 
 
         Matrix3d RR1 = Rij_e; Matrix3d RR2 = Rij_e; 
-        Vector3d tt1 = tij_e; Vector3d tt2 = tij_e; 
+        // Vector3d tt1 = tij_e; Vector3d tt2 = tij_e; 
         // opt_solver.solveCeres(in_3d, RR1, tt1); 
         // dR = Rij.transpose()*RR1; 
         // dt = tt1 - tij; 
@@ -299,7 +297,7 @@ bool run_once(double noise, int cnt_3d, int cnt_2d, vector<double>& v_dR, vector
         print_err("opengv upnp: ", upnp_transformation, Rij, tij); 
 
         v_dR.push_back(R2D(computeAngle(dR)));  
-        v_dt.push_back(dt.norm()/tij.norm()*100.); 
+        // v_dt.push_back(dt.norm()/tij.norm()*100.); 
 
     }
     return true; 

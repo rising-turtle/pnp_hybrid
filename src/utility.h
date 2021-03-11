@@ -39,6 +39,9 @@ struct poly{
 	poly(){
 	    // default struct_core depth's variance w.r.t. depth  
 	    a1 = 0.00155816; a2 = -0.00362021; a3 = 0.00452812;
+	    // default depth's variance fx = 525  
+	    // a1 = 1./(800.*0.1); a2 = 0; a3 = 0; 
+	    a2 = a3 = 0;
 	}
 	double y(double x){
 		if(x <= 0.75)
