@@ -247,13 +247,13 @@ bool computePnP(vector<pair<Vector3d, Vector3d>>& corrs_3d, vector<pair<Vector3d
             opt_solver.solveCeres(in_3d, Rij_e, tij_e);
             dR = Rij.transpose()*Rij_e; 
             dt = tij_e - tij; 
-            cout<<"Opti_1 dR: "<<dt.norm()<<" dR: "<<computeAngle(dR)<<endl; 
+            cout<<"Opti_1 dR: "<<dt.norm()<<" dR: "<<(computeAngle(dR))<<endl; 
         }
 
         dR = Rij.transpose()*Rij_e;   
         dt = tij_e - tij; 
-        v_dR.push_back(computeAngle(dR));  
-        v_dt.push_back(dt.norm()); 
+        v_dR.push_back(R2D(computeAngle(dR)));  
+        v_dt.push_back(100.*dt.norm()/tij.norm()); 
 
         //derive correspondences based on random point-cloud
         bearingVectors_t points;
@@ -290,9 +290,9 @@ bool computePnP(vector<pair<Vector3d, Vector3d>>& corrs_3d, vector<pair<Vector3d
             dt = tij_e - tij; 
             cout<<"Opti_2 dR: "<<dt.norm()<<" dR: "<<computeAngle(dR)<<endl; 
         }
-        v_dR.push_back(computeAngle(dR));  
-        v_dt.push_back(dt.norm()); 
-
+        v_dR.push_back(R2D(computeAngle(dR)));  
+        v_dt.push_back(100.*dt.norm()/tij.norm()); 
+        
         inlier_2d = in_2d; 
     }
     return true; 

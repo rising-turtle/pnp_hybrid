@@ -44,7 +44,8 @@ int main(int argc, char* argv[]){
 	string motion_record("rot_pitch"); // pitch is actually yaw 
 	vector<double> gt_yaw_y{0, 3.13, 6.19, 9.25, 12.32, 15.32, 18.44}; // rot_pitch
 
-	vector<int> v_cnt{10, 20, 30, 40, 50, 60, 70}; 
+	// vector<int> v_cnt{10, 20, 30, 40, 50, 60, 70}; 
+	vector<int> v_cnt{ 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30};
 
 	for(int k=1; k<gt_yaw_y.size(); k++){
 
@@ -74,7 +75,7 @@ int main(int argc, char* argv[]){
 		}
 
 		// save results 
-		string out_file = motion_record + "_" + to_string(k*3) + ".txt"; 
+		string out_file = motion_record + "_" + to_string(k*3) + "_hybrid.txt"; 
 		ofstream ouf(out_file.c_str()); 
 		for(int i=0; i<v_cnt.size(); i++){
 			pair<double, double> trans = getMeanStd(vv_dR[i]);
