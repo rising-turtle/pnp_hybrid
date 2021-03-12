@@ -25,7 +25,7 @@ method_list= struct('name', name, 'f', f, 'mean_r', A, 'mean_t', A,...
     'med_r', A, 'med_t', A, 'std_r', A, 'std_t', A, 'r', B, 't', B,...
     'marker', marker, 'color', color, 'markerfacecolor', markerfacecolor, 'linestyle', linestyle);
 
-focal_length = 1200; %1460; 
+focal_length = 800; % 1200; %1460; 
 CX = 640; % 960; 
 CY = 480; %650;
 

@@ -141,6 +141,7 @@ function d_std = poly_derive(d, F, noise)
 end
 
 function d_std = poly_curve(d)
-    d_std = (d^2*0.00155816 - 0.00362021*d + 0.00452812);
+    % d_std = (d^2*0.00155816 - 0.00362021*d + 0.00452812);
+    d_std = (d^2*0.00155816); % - 0.00362021*d + 0.00452812);
 end
 
