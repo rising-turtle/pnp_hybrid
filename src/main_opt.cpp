@@ -11,6 +11,7 @@
 #include "utility.h"
 #include "opt_solver.h"
 #include <Eigen/Core>
+#include <Eigen/Dense>
 #include <cmath>
 #include <sstream>
 #include <fstream>
@@ -18,10 +19,11 @@
 
 using namespace Eigen; 
 using namespace std; 
+using namespace cv; 
 
 void run_opt_3d_2d(); 
 void run_opt_hybrid(); 
-void print_err(string pre, Matrix3d& Re, Vector3d& te, Matrix3d& Rg, Vector3d& tg); 
+double  print_err(string pre, Matrix3d& Re, Vector3d& te, Matrix3d& Rg, Vector3d& tg); 
 
 
 int main(int argc, char* argv[])
@@ -52,7 +54,8 @@ void run_opt_hybrid()
 
     // cout<<"ground truth Rij: "<<endl<<Rij<<endl; 
     
-    Vector3d tij(0.2, 0.05, 0.3); 
+    Vector3d tij(0.05, 0.05, 0.05); 
+    // Vector3d tij(0.2, 0.05, 0.3); 
 
     Matrix3d R = Rij.transpose(); 
     Vector3d t = -Rij.transpose()*tij; 
@@ -68,16 +71,19 @@ void run_opt_hybrid()
    	Matrix3d R2; //, Rij_e_t;
 	Vector3d t2; // tij_e_t; 
 
-	int cnt_2d = 40; 
-    int cnt_3d = 20; 
+	int cnt_2d = 400; 
+    int cnt_3d = 10; 
 	OptSolver opt_solver; 
 
     // 3d-2d 
     cv::Mat rvec, tvec; 
 
-    for(int i=0; i<10; i++){
+    int trailNum = 100;
+    cv::Mat RE_3d2d= Mat::zeros(trailNum, 1,CV_64FC1);
+    cv::Mat RE_hybrid= Mat::zeros(trailNum, 1,CV_64FC1);
+    for(int i=0; i<trailNum-1; i++){
 
-    	cout<<"times: "<<i<<endl; 
+    	cout<<"times: "<<i+1<<endl; 
     	vector<pair<Vector3d, Vector3d>> corrs_noise = sim.add_noise(corrs); 
 
     	// 2d-2d get rotation 
@@ -95,19 +101,28 @@ void run_opt_hybrid()
 
     	// 3d-2d result 
     	me.solvePNP_3D_2D(in_3d, Rij_e, tij_e); 
-    	print_err("3D_2D iterative: ", Rij_e, tij_e, Rij, tij); 
+    	RE_3d2d.at<double>(i) = print_err("3D_2D iterative: ", Rij_e, tij_e, Rij, tij); 
 		    	 
     	// solve Rij_e using the specified number of 2d features 
     	me.solvePNP_2D_2D(in_2d, Rij_e, tij_e);
     	// solve tij_e     
-    	st.solveTCeres(in_3d, Rij_e, tij_e); 
+    	// st.solveTCeres(in_3d, Rij_e, tij_e); 
     	// optimize the [Rij_e] and [tij_e]
-    	print_err("initial hybrid: ", Rij_e, tij_e, Rij, tij);
-    	opt_solver.solveCeres(in_3d, Rij_e, tij_e); 
-    	print_err("hybrid after opt: ", Rij_e, tij_e, Rij, tij);
+    	RE_hybrid.at<double>(i) = print_err("initial hybrid: ", Rij_e, tij_e, Rij, tij);
+    	// opt_solver.solveCeres(in_3d, Rij_e, tij_e); 
+    	// print_err("hybrid after opt: ", Rij_e, tij_e, Rij, tij);
 
     	cout<<endl<<endl;
 	}
+
+    cv::Scalar mean, stddev;
+    
+    cout << trailNum <<" times "<<cnt_3d <<" depth correspondences from "<<cnt_2d << " visual features"<<endl;
+
+    cv::meanStdDev(RE_3d2d, mean, stddev);
+    cout << "3D_2D iterative:       mean: " << mean.val[0]    <<" std: " << stddev.val[0] <<endl;
+    cv::meanStdDev(RE_hybrid, mean, stddev);
+    cout << "hybrid_rot iterative:  mean: " << mean.val[0]    <<" std: " << stddev.val[0] <<endl;
     return ; 
 }
 
@@ -180,10 +195,12 @@ void run_opt_3d_2d()
 }
 
 
-void print_err(string pre, Matrix3d& Re, Vector3d& te, Matrix3d& Rg, Vector3d& tg)
+double print_err(string pre, Matrix3d& Re, Vector3d& te, Matrix3d& Rg, Vector3d& tg)
 {
 	Vector3d dt = tg - te; 
 	Matrix3d dR = Rg.transpose()*Re;
 
-	cout<<pre<<" trans err: "<<dt.norm()<<" ros err: "<<computeAngle(dR)<<endl; 
+	// cout<<pre<<" trans err: "<<dt.norm()<<" ros err: "<<computeAngle(dR)<<endl; 
+    cout<<pre<<" ros err: "<<computeAngle(dR)<<endl; 
+    return computeAngle(dR);
 }
